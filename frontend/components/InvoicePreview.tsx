@@ -1,7 +1,5 @@
 import React from 'react';
-import { Page, Text, View, Document, StyleSheet, PDFViewer} from '@react-pdf/renderer';
-import Image from 'next/image';
-
+import { Page, Text, View, Document, StyleSheet, PDFViewer, Image} from '@react-pdf/renderer';
 
 // Stiilid PDF-i jaoks
 const styles = StyleSheet.create({
@@ -134,15 +132,14 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({ companyDetails, invoiceDeta
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
-      <Image 
-  src="/Test-IMG.png" 
-  alt="Company Logo" 
-  width={80} 
-  height={80} 
-  style={{ 
-    objectFit: 'contain', 
-    borderRadius: 40 
-  }} 
+      <Image
+  src="/Test-IMG.png"
+  style={{
+    width: 80,
+    height: 80,
+    objectFit: 'contain',
+    borderRadius: 40,
+  }}
 />
         <View style={styles.companyInfo}>
           <Text style={{ fontWeight: 'bold' }}>Company</Text>
