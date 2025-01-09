@@ -1,6 +1,6 @@
-import { useAuth } from "../context/AuthContext";
-import Layout from "../components/Layout";
-import InvoiceTable from "../components/InvoiceTable";
+import { useAuth } from '../context/AuthContext';
+import Layout from '../components/Layout';
+import InvoiceTable from '../components/InvoiceTable';
 
 const InvoicesPage = () => {
   const { isAuthenticated } = useAuth();

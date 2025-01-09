@@ -1,9 +1,9 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["tailwindui.com"], // Lisatud hostname, kust pildid võivad laadida
+    domains: ['tailwindui.com'], // Lisatud hostname, kust pildid võivad laadida
   },
 };
 

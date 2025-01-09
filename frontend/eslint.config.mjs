@@ -1,6 +1,6 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { FlatCompat } from '@eslint/eslintrc';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -11,15 +11,27 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends(
-    "next/core-web-vitals",
-    "plugin:@typescript-eslint/recommended"
+    'next/core-web-vitals',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended' // Adds Prettier integration
   ),
   {
+    linterOptions: {
+      reportUnusedDisableDirectives: true, // Uuendatud seadistus
+    },
     rules: {
-      "@typescript-eslint/no-unused-vars": "warn",
-      "@typescript-eslint/no-explicit-any": "off",
-      "react/react-in-jsx-scope": "off",
-      "no-console": "warn",
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
+      'react/react-in-jsx-scope': 'off',
+      'no-console': 'warn',
+      'prettier/prettier': [
+        'warn',
+        {
+          singleQuote: true,
+          semi: true,
+          trailingComma: 'es5',
+        },
+      ],
     },
   },
 ];

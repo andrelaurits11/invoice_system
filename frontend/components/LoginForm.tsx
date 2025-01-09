@@ -1,35 +1,35 @@
-import { useState } from "react";
-import { useRouter } from "next/router";
-import axios from "axios";
-import { useAuth } from "../context/AuthContext";
-import Link from "next/link";
-import Image from "next/image";
+import { useState } from 'react';
+import { useRouter } from 'next/router';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
+import Link from 'next/link';
+import Image from 'next/image';
 
 const LoginForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
   const { login } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     try {
-      const response = await axios.post("http://localhost:8000/api/login", {
+      const response = await axios.post('http://localhost:8000/api/login', {
         email,
         password,
       });
 
       login(response.data.token);
 
-      router.push("/");
+      router.push('/');
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || "Login failed.");
+        setError(err.response?.data?.message || 'Login failed.');
       } else {
-        setError("An unexpected error occurred.");
+        setError('An unexpected error occurred.');
       }
     }
   };
@@ -84,7 +84,7 @@ const LoginForm = () => {
               </button>
               {error && <p className="text-red-500">{error}</p>}
               <p className="text-stone-50">
-                Don&#39;t have an account?{" "}
+                Don&#39;t have an account?{' '}
                 <Link
                   href="/register"
                   className="text-blue-500 hover:text-blue-300"

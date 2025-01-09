@@ -1,10 +1,10 @@
-import React, { useState } from "react";
-import Layout from "../components/Layout";
-import InvoicePreview from "../components/InvoicePreview";
-import { useRouter } from "next/router";
-import { useAuth } from "../context/AuthContext";
-import Link from "next/link";
-import axios from "axios";
+import React, { useState } from 'react';
+import Layout from '../components/Layout';
+import InvoicePreview from '../components/InvoicePreview';
+import { useRouter } from 'next/router';
+import { useAuth } from '../context/AuthContext';
+import Link from 'next/link';
+import axios from 'axios';
 
 interface CompanyDetails {
   name: string;
@@ -48,46 +48,46 @@ export default function NewInvoice() {
   const { logout } = useAuth();
 
   const [companyDetails, setCompanyDetails] = useState<CompanyDetails>({
-    name: "",
-    email: "",
-    phone: "",
-    address1: "",
-    address2: "",
-    city: "",
-    state: "",
-    zip: "",
-    country: "",
+    name: '',
+    email: '',
+    phone: '',
+    address1: '',
+    address2: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: '',
   });
 
   const [invoiceDetails, setInvoiceDetails] = useState<InvoiceDetails>({
-    dueDate: "",
-    invoiceID: "",
-    items: [{ description: "", rate: "", quantity: "" }],
+    dueDate: '',
+    invoiceID: '',
+    items: [{ description: '', rate: '', quantity: '' }],
   });
 
   const [clients, setClients] = useState<Client[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
   const handleCompanyChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
     setCompanyDetails((prev) => ({ ...prev, [name]: value }));
 
-    if (name === "name" && value.length > 2) {
+    if (name === 'name' && value.length > 2) {
       try {
         const response = await axios.get(
           `http://localhost:8000/api/clients?name=${value}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             },
-          },
+          }
         );
 
         if (response.data) {
           const filteredClients = response.data.filter((client: Client) =>
-            client.company_name.toLowerCase().includes(value.toLowerCase()),
+            client.company_name.toLowerCase().includes(value.toLowerCase())
           );
           setClients(filteredClients);
           setShowDropdown(true);
@@ -98,11 +98,11 @@ export default function NewInvoice() {
       } catch (error) {
         if (axios.isAxiosError(error)) {
           console.error(
-            "Error fetching clients:",
-            error.response?.data || error.message,
+            'Error fetching clients:',
+            error.response?.data || error.message
           );
         } else {
-          console.error("Unexpected error:", error);
+          console.error('Unexpected error:', error);
         }
         setClients([]);
         setShowDropdown(false);
@@ -119,18 +119,18 @@ export default function NewInvoice() {
       email: client.email,
       phone: client.phone,
       address1: client.address,
-      address2: client.address2 || "",
-      city: client.state || "",
-      state: client.state || "",
-      zip: client.zip || "",
-      country: client.country || "",
+      address2: client.address2 || '',
+      city: client.state || '',
+      state: client.state || '',
+      zip: client.zip || '',
+      country: client.country || '',
     });
     setShowDropdown(false);
   };
 
   const handleInvoiceChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number,
+    index: number
   ) => {
     const { name, value } = e.target;
     const updatedItems = [...invoiceDetails.items];
@@ -141,7 +141,7 @@ export default function NewInvoice() {
   const addItem = () => {
     setInvoiceDetails((prev) => ({
       ...prev,
-      items: [...prev.items, { description: "", rate: "", quantity: "" }],
+      items: [...prev.items, { description: '', rate: '', quantity: '' }],
     }));
   };
 
@@ -174,29 +174,29 @@ export default function NewInvoice() {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/invoices",
+        'http://localhost:8000/api/invoices',
         payload,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json',
           },
-        },
+        }
       );
 
       if (response.status === 201) {
-        alert("Invoice saved successfully!");
-        router.push("/invoices");
+        alert('Invoice saved successfully!');
+        router.push('/invoices');
       }
     } catch {
-      alert("Failed to save invoice.");
+      alert('Failed to save invoice.');
     }
   };
   const saveAndSendInvoice = async () => {
     try {
       await saveInvoice(); // Save the invoice first
       await axios.post(
-        "http://localhost:8000/api/invoices/send",
+        'http://localhost:8000/api/invoices/send',
         {
           email: companyDetails.email,
           invoiceDetails: {
@@ -205,24 +205,24 @@ export default function NewInvoice() {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json',
           },
-        },
+        }
       );
 
-      alert("Invoice saved and sent successfully!");
-      router.push("/invoices");
+      alert('Invoice saved and sent successfully!');
+      router.push('/invoices');
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error(
-          "Error sending invoice:",
-          error.response?.data || error.message,
+          'Error sending invoice:',
+          error.response?.data || error.message
         );
-        alert(error.response?.data?.message || "Failed to send the invoice.");
+        alert(error.response?.data?.message || 'Failed to send the invoice.');
       } else {
-        console.error("Unknown error:", error);
-        alert("An unknown error occurred. Please try again.");
+        console.error('Unknown error:', error);
+        alert('An unknown error occurred. Please try again.');
       }
     }
   };
@@ -235,19 +235,19 @@ export default function NewInvoice() {
             <h2 className="text-xl font-bold mb-6">Arved</h2>
             <nav className="flex flex-col space-y-4">
               <button
-                onClick={() => router.push("/")}
+                onClick={() => router.push('/')}
                 className="text-gray-600"
               >
                 Töölaud
               </button>
               <button
-                onClick={() => router.push("/invoices")}
+                onClick={() => router.push('/invoices')}
                 className="text-blue-500 font-semibold"
               >
                 Arved
               </button>
               <button
-                onClick={() => router.push("/clients")}
+                onClick={() => router.push('/clients')}
                 className="text-gray-600"
               >
                 Kliendid
@@ -296,7 +296,7 @@ export default function NewInvoice() {
                               className="p-2 hover:bg-gray-100 cursor-pointer text-black"
                               onClick={() => selectClient(client)}
                             >
-                              {client.company_name || "Unnamed Client"}
+                              {client.company_name || 'Unnamed Client'}
                             </li>
                           ))
                         ) : (

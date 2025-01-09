@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React from "react";
+import React from 'react';
 import {
   Page,
   Text,
@@ -8,101 +8,101 @@ import {
   StyleSheet,
   PDFViewer,
   Image,
-} from "@react-pdf/renderer";
+} from '@react-pdf/renderer';
 
 // Stiilid PDF-i jaoks
 const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontSize: 12,
-    fontFamily: "Helvetica",
-    backgroundColor: "#fff",
+    fontFamily: 'Helvetica',
+    backgroundColor: '#fff',
   },
   header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
 
   companyInfo: {
-    flexDirection: "column",
-    alignItems: "flex-end",
-    textAlign: "right",
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    textAlign: 'right',
   },
   titleContainer: {
-    textAlign: "center",
+    textAlign: 'center',
     marginVertical: 10,
   },
   title: {
     fontSize: 20,
-    fontWeight: "bold",
-    color: "#000",
+    fontWeight: 'bold',
+    color: '#000',
   },
   amountContainer: {
-    backgroundColor: "#377dff",
-    color: "#fff",
+    backgroundColor: '#377dff',
+    color: '#fff',
     padding: 15,
     borderRadius: 5,
-    textAlign: "right",
+    textAlign: 'right',
     marginVertical: 20,
     fontSize: 24,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   clientDetails: {
     marginVertical: 20,
   },
   clientRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 10,
   },
   clientInfo: {
     flex: 1,
-    textAlign: "left",
+    textAlign: 'left',
     paddingHorizontal: 10,
   },
   clientLabel: {
-    color: "#888",
-    fontWeight: "bold",
+    color: '#888',
+    fontWeight: 'bold',
   },
   clientData: {
-    color: "#000",
+    color: '#000',
     marginTop: 2,
   },
   countryFix: {
     flex: 1,
-    textAlign: "left",
+    textAlign: 'left',
     marginLeft: -170,
     paddingHorizontal: 10,
   },
   table: {
     marginTop: 20,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: '#ccc',
     borderRadius: 5,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   tableRow: {
-    flexDirection: "row",
+    flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
+    borderBottomColor: '#ccc',
   },
   tableHeader: {
-    backgroundColor: "#f5f5f5",
+    backgroundColor: '#f5f5f5',
   },
   tableCellHeader: {
     flex: 1,
     padding: 10,
-    fontWeight: "bold",
-    textAlign: "center",
-    color: "#377dff",
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#377dff',
   },
   tableCell: {
     flex: 1,
     padding: 10,
-    textAlign: "center",
-    color: "#555",
+    textAlign: 'center',
+    color: '#555',
   },
 });
 
@@ -149,12 +149,12 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({
           style={{
             width: 80,
             height: 80,
-            objectFit: "contain",
+            objectFit: 'contain',
             borderRadius: 40,
           }}
         />
         <View style={styles.companyInfo}>
-          <Text style={{ fontWeight: "bold" }}>Company</Text>
+          <Text style={{ fontWeight: 'bold' }}>Company</Text>
           <Text>{companyDetails.name}</Text>
           <Text>{companyDetails.address1}</Text>
           <Text>{companyDetails.address2}</Text>
@@ -167,13 +167,13 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({
 
       <View style={styles.amountContainer}>
         <Text>
-          Total Amount:{" "}
+          Total Amount:{' '}
           {invoiceDetails.items
             .reduce(
               (sum, item) =>
                 sum +
-                parseFloat(item.rate || "0") * parseFloat(item.quantity || "0"),
-              0,
+                parseFloat(item.rate || '0') * parseFloat(item.quantity || '0'),
+              0
             )
             .toFixed(2)}
           €
@@ -193,7 +193,7 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({
           <View style={styles.clientInfo}>
             <Text style={styles.clientLabel}>Address</Text>
             <Text style={styles.clientData}>
-              {companyDetails.address2} {companyDetails.zip}{" "}
+              {companyDetails.address2} {companyDetails.zip}{' '}
               {companyDetails.state}
             </Text>
           </View>
@@ -224,7 +224,7 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({
             <Text style={styles.tableCell}>{item.quantity}</Text>
             <Text style={styles.tableCell}>
               {(
-                parseFloat(item.rate) * parseFloat(item.quantity || "0")
+                parseFloat(item.rate) * parseFloat(item.quantity || '0')
               ).toFixed(2)}
               €
             </Text>
@@ -241,7 +241,7 @@ const InvoicePreviewPDF: React.FC<PDFViewerProps> = ({
   invoiceDetails,
 }) => {
   return (
-    <PDFViewer style={{ width: "100%", height: "500px" }}>
+    <PDFViewer style={{ width: '100%', height: '500px' }}>
       <InvoiceDocument
         companyDetails={companyDetails}
         invoiceDetails={invoiceDetails}

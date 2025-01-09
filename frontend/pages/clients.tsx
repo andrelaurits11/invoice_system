@@ -1,6 +1,6 @@
-import { useAuth } from "../context/AuthContext";
-import Layout from "../components/Layout";
-import ClientTable from "../components/ClientTable";
+import { useAuth } from '../context/AuthContext';
+import Layout from '../components/Layout';
+import ClientTable from '../components/ClientTable';
 
 const ClientsPage = () => {
   const { isAuthenticated } = useAuth();

@@ -1,22 +1,22 @@
-import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import axios from "axios";
-import Link from "next/link";
-import Image from "next/image";
+import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
+import Link from 'next/link';
+import Image from 'next/image';
 
 const RegisterForm = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const { login } = useAuth();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     try {
-      const response = await axios.post("http://localhost:8000/api/register", {
+      const response = await axios.post('http://localhost:8000/api/register', {
         name,
         email,
         password,
@@ -28,10 +28,10 @@ const RegisterForm = () => {
       if (axios.isAxiosError(err)) {
         setError(
           err.response?.data?.message ||
-            "Registration failed. Please try again.",
+            'Registration failed. Please try again.'
         );
       } else {
-        setError("An unexpected error occurred.");
+        setError('An unexpected error occurred.');
       }
     }
   };
@@ -96,7 +96,7 @@ const RegisterForm = () => {
               </button>
               {error && <p className="text-red-500">{error}</p>}
               <p className="text-stone-50">
-                Already have an account?{" "}
+                Already have an account?{' '}
                 <Link
                   href="/login"
                   className="text-blue-500 hover:text-blue-300"
