@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext';
-import Link from 'next/link';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext";
+import Link from "next/link";
 
 interface Client {
   id: number;
@@ -19,19 +19,19 @@ const ClientTable = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/clients', {
+      const response = await axios.get("http://localhost:8000/api/clients", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
         },
       });
       setClients(response.data);
     } catch {
-      alert('Failed to fetch clients.');
+      alert("Failed to fetch clients.");
     }
   };
 
   useEffect(() => {
-    fetchClients(); 
+    fetchClients();
   }, []);
 
   return (
@@ -39,13 +39,19 @@ const ClientTable = () => {
       <div className="bg-gray-100 w-1/5 p-6">
         <h2 className="text-xl font-bold mb-6">Kliendid</h2>
         <nav className="flex flex-col space-y-4">
-          <button onClick={() => router.push('/')} className="text-gray-600">
+          <button onClick={() => router.push("/")} className="text-gray-600">
             Töölaud
           </button>
-          <button onClick={() => router.push('/invoices')} className="text-gray-600">
+          <button
+            onClick={() => router.push("/invoices")}
+            className="text-gray-600"
+          >
             Arved
           </button>
-          <button onClick={() => router.push('/clients')} className="text-blue-500 font-semibold">
+          <button
+            onClick={() => router.push("/clients")}
+            className="text-blue-500 font-semibold"
+          >
             Kliendid
           </button>
           <button
@@ -65,7 +71,9 @@ const ClientTable = () => {
             className="w-1/3 p-2 border border-gray-300 rounded"
           />
           <Link href="/new-client">
-            <button className="bg-blue-500 text-white px-4 py-2 rounded">Uus Klient</button>
+            <button className="bg-blue-500 text-white px-4 py-2 rounded">
+              Uus Klient
+            </button>
           </Link>
         </div>
 

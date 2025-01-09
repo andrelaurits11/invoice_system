@@ -1,7 +1,7 @@
-import React from 'react';
-import { Line, Bar } from 'react-chartjs-2';
-import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext'; // Lisame autentimise konteksti
+import React from "react";
+import { Line, Bar } from "react-chartjs-2";
+import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext"; // Lisame autentimise konteksti
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,23 +12,32 @@ import {
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+} from "chart.js";
 
-// Chart.js moodulid 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
+// Chart.js moodulid
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+);
 
 const Dashboard = () => {
-  const router = useRouter(); 
-  const { logout } = useAuth(); 
-  
+  const router = useRouter();
+  const { logout } = useAuth();
+
   const lineChartData = {
-    labels: ['Jaanuar', 'Veebruar', 'Märts', 'Aprill', 'Mai', 'Juuni'],
+    labels: ["Jaanuar", "Veebruar", "Märts", "Aprill", "Mai", "Juuni"],
     datasets: [
       {
-        label: 'Summad',
+        label: "Summad",
         data: [200, 400, 300, 500, 700, 600],
-        borderColor: 'rgba(75, 192, 192, 1)',
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+        borderColor: "rgba(75, 192, 192, 1)",
+        backgroundColor: "rgba(75, 192, 192, 0.2)",
         borderWidth: 2,
         tension: 0.3,
       },
@@ -37,13 +46,13 @@ const Dashboard = () => {
 
   // Andmed tulpdiagrammi jaoks
   const barChartData = {
-    labels: ['Jaanuar', 'Veebruar', 'Märts', 'Aprill', 'Mai', 'Juuni'],
+    labels: ["Jaanuar", "Veebruar", "Märts", "Aprill", "Mai", "Juuni"],
     datasets: [
       {
-        label: 'Summad',
+        label: "Summad",
         data: [100, 300, 200, 400, 500, 450],
-        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: "rgba(54, 162, 235, 0.7)",
+        borderColor: "rgba(54, 162, 235, 1)",
         borderWidth: 1,
       },
     ],
@@ -56,19 +65,19 @@ const Dashboard = () => {
         <h2 className="text-xl font-bold mb-6">Töölaud</h2>
         <nav className="flex flex-col space-y-4">
           <button
-            onClick={() => router.push('/')}
+            onClick={() => router.push("/")}
             className="text-blue-500 font-semibold"
           >
             Töölaud
           </button>
           <button
-            onClick={() => router.push('/invoices')}
+            onClick={() => router.push("/invoices")}
             className="text-gray-600"
           >
             Arved
           </button>
           <button
-            onClick={() => router.push('/clients')}
+            onClick={() => router.push("/clients")}
             className="text-gray-600"
           >
             Kliendid

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import Layout from '../components/Layout';
-import InvoicePreview from '../components/InvoicePreview';
-import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext';
-import Link from 'next/link';
-import axios from 'axios';
+import React, { useState } from "react";
+import Layout from "../components/Layout";
+import InvoicePreview from "../components/InvoicePreview";
+import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext";
+import Link from "next/link";
+import axios from "axios";
 
 interface CompanyDetails {
   name: string;
@@ -32,7 +32,7 @@ interface InvoiceDetails {
 
 interface Client {
   id: number;
-  company_name: string; 
+  company_name: string;
   email: string;
   phone: string;
   address: string;
@@ -48,39 +48,46 @@ export default function NewInvoice() {
   const { logout } = useAuth();
 
   const [companyDetails, setCompanyDetails] = useState<CompanyDetails>({
-    name: '',
-    email: '',
-    phone: '',
-    address1: '',
-    address2: '',
-    city: '',
-    state: '',
-    zip: '',
-    country: '',
+    name: "",
+    email: "",
+    phone: "",
+    address1: "",
+    address2: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
   });
 
   const [invoiceDetails, setInvoiceDetails] = useState<InvoiceDetails>({
-    dueDate: '',
-    invoiceID: '',
-    items: [{ description: '', rate: '', quantity: '' }],
+    dueDate: "",
+    invoiceID: "",
+    items: [{ description: "", rate: "", quantity: "" }],
   });
 
   const [clients, setClients] = useState<Client[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const handleCompanyChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCompanyChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const { name, value } = e.target;
     setCompanyDetails((prev) => ({ ...prev, [name]: value }));
-  
-    if (name === 'name' && value.length > 2) {
+
+    if (name === "name" && value.length > 2) {
       try {
-        const response = await axios.get(`http://localhost:8000/api/clients?name=${value}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` },
-        });
-  
+        const response = await axios.get(
+          `http://localhost:8000/api/clients?name=${value}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          },
+        );
+
         if (response.data) {
           const filteredClients = response.data.filter((client: Client) =>
-            client.company_name.toLowerCase().includes(value.toLowerCase())
+            client.company_name.toLowerCase().includes(value.toLowerCase()),
           );
           setClients(filteredClients);
           setShowDropdown(true);
@@ -90,9 +97,12 @@ export default function NewInvoice() {
         }
       } catch (error) {
         if (axios.isAxiosError(error)) {
-          console.error('Error fetching clients:', error.response?.data || error.message);
+          console.error(
+            "Error fetching clients:",
+            error.response?.data || error.message,
+          );
         } else {
-          console.error('Unexpected error:', error);
+          console.error("Unexpected error:", error);
         }
         setClients([]);
         setShowDropdown(false);
@@ -102,24 +112,26 @@ export default function NewInvoice() {
       setShowDropdown(false);
     }
   };
-  
+
   const selectClient = (client: Client) => {
     setCompanyDetails({
       name: client.company_name,
       email: client.email,
       phone: client.phone,
       address1: client.address,
-      address2: client.address2 || '',
-      city: client.state || '',
-      state: client.state || '',
-      zip: client.zip || '',
-      country: client.country || '',
+      address2: client.address2 || "",
+      city: client.state || "",
+      state: client.state || "",
+      zip: client.zip || "",
+      country: client.country || "",
     });
     setShowDropdown(false);
   };
-  
 
-  const handleInvoiceChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+  const handleInvoiceChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number,
+  ) => {
     const { name, value } = e.target;
     const updatedItems = [...invoiceDetails.items];
     updatedItems[index][name as keyof InvoiceItem] = value;
@@ -129,7 +141,7 @@ export default function NewInvoice() {
   const addItem = () => {
     setInvoiceDetails((prev) => ({
       ...prev,
-      items: [...prev.items, { description: '', rate: '', quantity: '' }],
+      items: [...prev.items, { description: "", rate: "", quantity: "" }],
     }));
   };
 
@@ -161,51 +173,59 @@ export default function NewInvoice() {
     };
 
     try {
-      const response = await axios.post('http://localhost:8000/api/invoices', payload, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
+      const response = await axios.post(
+        "http://localhost:8000/api/invoices",
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (response.status === 201) {
-        alert('Invoice saved successfully!');
-        router.push('/invoices');
+        alert("Invoice saved successfully!");
+        router.push("/invoices");
       }
-    } catch{
-
-      alert('Failed to save invoice.');
+    } catch {
+      alert("Failed to save invoice.");
     }
   };
   const saveAndSendInvoice = async () => {
     try {
       await saveInvoice(); // Save the invoice first
-      await axios.post('http://localhost:8000/api/invoices/send', {
-        email: companyDetails.email,
-        invoiceDetails: {
-          invoice_id: invoiceDetails.invoiceID,
+      await axios.post(
+        "http://localhost:8000/api/invoices/send",
+        {
+          email: companyDetails.email,
+          invoiceDetails: {
+            invoice_id: invoiceDetails.invoiceID,
+          },
         },
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
-  
-      alert('Invoice saved and sent successfully!');
-      router.push('/invoices');
+      );
+
+      alert("Invoice saved and sent successfully!");
+      router.push("/invoices");
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        console.error('Error sending invoice:', error.response?.data || error.message);
-        alert(error.response?.data?.message || 'Failed to send the invoice.');
+        console.error(
+          "Error sending invoice:",
+          error.response?.data || error.message,
+        );
+        alert(error.response?.data?.message || "Failed to send the invoice.");
       } else {
-        console.error('Unknown error:', error);
-        alert('An unknown error occurred. Please try again.');
+        console.error("Unknown error:", error);
+        alert("An unknown error occurred. Please try again.");
       }
     }
   };
-  
-
 
   return (
     <Layout>
@@ -214,13 +234,22 @@ export default function NewInvoice() {
           <div className="bg-gray-100 w-1/5 p-6 flex flex-col">
             <h2 className="text-xl font-bold mb-6">Arved</h2>
             <nav className="flex flex-col space-y-4">
-              <button onClick={() => router.push('/')} className="text-gray-600">
+              <button
+                onClick={() => router.push("/")}
+                className="text-gray-600"
+              >
                 Töölaud
               </button>
-              <button onClick={() => router.push('/invoices')} className="text-blue-500 font-semibold">
+              <button
+                onClick={() => router.push("/invoices")}
+                className="text-blue-500 font-semibold"
+              >
                 Arved
               </button>
-              <button onClick={() => router.push('/clients')} className="text-gray-600">
+              <button
+                onClick={() => router.push("/clients")}
+                className="text-gray-600"
+              >
                 Kliendid
               </button>
               <button
@@ -250,34 +279,34 @@ export default function NewInvoice() {
               <div className="bg-white p-6 shadow rounded lg:col-span-2">
                 <h2 className="font-semibold text-lg mb-4">Ettevõtte Andmed</h2>
                 <form className="grid grid-cols-2 gap-4">
-                <div className="relative">
-  <input
-    className="border p-2 rounded w-full"
-    placeholder="Search for a company"
-    name="name"
-    value={companyDetails.name}
-    onChange={handleCompanyChange}
-  />
-  {showDropdown && (
-    <ul className="absolute z-50 bg-white border border-gray-300 rounded w-full max-h-40 overflow-y-auto shadow-lg">
-      {clients.length > 0 ? (
-        clients.map((client) => (
-          <li
-            key={client.id}
-            className="p-2 hover:bg-gray-100 cursor-pointer text-black"
-            onClick={() => selectClient(client)}
-          >
-            {client.company_name || "Unnamed Client"}
-          </li>
-        ))
-      ) : (
-        <li className="p-2 text-gray-500">No results found</li>
-      )}
-    </ul>
-  )}
-</div>
-
-               
+                  <div className="relative">
+                    <input
+                      className="border p-2 rounded w-full"
+                      placeholder="Search for a company"
+                      name="name"
+                      value={companyDetails.name}
+                      onChange={handleCompanyChange}
+                    />
+                    {showDropdown && (
+                      <ul className="absolute z-50 bg-white border border-gray-300 rounded w-full max-h-40 overflow-y-auto shadow-lg">
+                        {clients.length > 0 ? (
+                          clients.map((client) => (
+                            <li
+                              key={client.id}
+                              className="p-2 hover:bg-gray-100 cursor-pointer text-black"
+                              onClick={() => selectClient(client)}
+                            >
+                              {client.company_name || "Unnamed Client"}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="p-2 text-gray-500">
+                            No results found
+                          </li>
+                        )}
+                      </ul>
+                    )}
+                  </div>
 
                   <input
                     className="border p-2 rounded"
@@ -343,14 +372,24 @@ export default function NewInvoice() {
                     placeholder="Maksetähtaeg"
                     name="dueDate"
                     value={invoiceDetails.dueDate}
-                    onChange={(e) => setInvoiceDetails({ ...invoiceDetails, dueDate: e.target.value })}
+                    onChange={(e) =>
+                      setInvoiceDetails({
+                        ...invoiceDetails,
+                        dueDate: e.target.value,
+                      })
+                    }
                   />
                   <input
                     className="border p-2 w-full mb-3 rounded"
                     placeholder="Arve ID"
                     name="invoiceID"
                     value={invoiceDetails.invoiceID}
-                    onChange={(e) => setInvoiceDetails({ ...invoiceDetails, invoiceID: e.target.value })}
+                    onChange={(e) =>
+                      setInvoiceDetails({
+                        ...invoiceDetails,
+                        invoiceID: e.target.value,
+                      })
+                    }
                   />
                   {invoiceDetails.items.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-4 mb-3">
@@ -403,10 +442,16 @@ export default function NewInvoice() {
               </div>
             </div>
             <div className="flex justify-end items-center mt-6 space-x-4">
-              <button onClick={saveInvoice} className="bg-gray-300 text-gray-700 px-4 py-2 rounded">
+              <button
+                onClick={saveInvoice}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+              >
                 Salvesta
               </button>
-              <button onClick={saveAndSendInvoice} className="bg-blue-500 text-white px-4 py-2 rounded">
+              <button
+                onClick={saveAndSendInvoice}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
                 Salvesta ja Saada
               </button>
             </div>

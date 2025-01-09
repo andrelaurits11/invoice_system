@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import Layout from '../components/Layout';
-import { useRouter } from 'next/router';
-import { useAuth } from '../context/AuthContext';
-import Link from 'next/link';
-import axios from 'axios';
+import { useState } from "react";
+import Layout from "../components/Layout";
+import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext";
+import Link from "next/link";
+import axios from "axios";
 
 interface CompanyDetails {
   name: string;
@@ -21,18 +21,18 @@ interface CompanyDetails {
 export default function NewClient() {
   const router = useRouter();
   const { logout } = useAuth();
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [companyDetails, setCompanyDetails] = useState<CompanyDetails>({
-    name: '',
-    contactPerson: '',
-    email: '',
-    phone: '',
-    address1: '',
-    address2: '',
-    city: '',
-    state: '',
-    zip: '',
-    country: '',
+    name: "",
+    contactPerson: "",
+    email: "",
+    phone: "",
+    address1: "",
+    address2: "",
+    city: "",
+    state: "",
+    zip: "",
+    country: "",
   });
 
   const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,25 +42,23 @@ export default function NewClient() {
 
   const saveClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     try {
-      await axios.post(
-        'http://localhost:8000/api/clients',
-        companyDetails,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-      alert('Klient salvestatud edukalt!');
-      router.push('/clients');
+      await axios.post("http://localhost:8000/api/clients", companyDetails, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      alert("Klient salvestatud edukalt!");
+      router.push("/clients");
     } catch (err) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || 'Kliendi salvestamine ebaõnnestus!');
+        setError(
+          err.response?.data?.message || "Kliendi salvestamine ebaõnnestus!",
+        );
       } else {
-        setError('Tekkis ootamatu viga!');
+        setError("Tekkis ootamatu viga!");
       }
     }
   };
@@ -72,13 +70,22 @@ export default function NewClient() {
           <div className="bg-gray-100 w-1/5 p-6 flex flex-col">
             <h2 className="text-xl font-bold mb-6">Arved</h2>
             <nav className="flex flex-col space-y-4">
-              <button onClick={() => router.push('/')} className="text-gray-600">
+              <button
+                onClick={() => router.push("/")}
+                className="text-gray-600"
+              >
                 Töölaud
               </button>
-              <button onClick={() => router.push('/invoices')} className="text-gray-600">
+              <button
+                onClick={() => router.push("/invoices")}
+                className="text-gray-600"
+              >
                 Arved
               </button>
-              <button onClick={() => router.push('/clients')} className="text-blue-500 font-semibold">
+              <button
+                onClick={() => router.push("/clients")}
+                className="text-blue-500 font-semibold"
+              >
                 Kliendid
               </button>
               <button

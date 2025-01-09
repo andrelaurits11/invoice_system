@@ -1,5 +1,5 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { createContext, useContext, useEffect, useState } from "react";
+import { useRouter } from "next/router";
 
 // Defineerime konteksti tüübi
 interface AuthContextType {
@@ -22,8 +22,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Kontrollime, kas kasutaja on autentitud ja seadistame oleku
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken'); // Kontrollime localStorage't
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken"); // Kontrollime localStorage't
       if (token) {
         setIsAuthenticated(true);
       } else {
@@ -35,22 +35,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Suuname kasutaja, kui ta pole autentitud ja üritab pääseda kaitstud lehele
   useEffect(() => {
-    const publicRoutes = ['/login', '/register']; // Lehed, kuhu saab ilma autentimiseta
-    if (!loading && !isAuthenticated && !publicRoutes.includes(router.pathname)) {
-      router.replace('/login');
+    const publicRoutes = ["/login", "/register"]; // Lehed, kuhu saab ilma autentimiseta
+    if (
+      !loading &&
+      !isAuthenticated &&
+      !publicRoutes.includes(router.pathname)
+    ) {
+      router.replace("/login");
     }
   }, [isAuthenticated, loading, router]);
 
   const login = (token: string) => {
-    localStorage.setItem('authToken', token); // Salvestame tokeni
+    localStorage.setItem("authToken", token); // Salvestame tokeni
     setIsAuthenticated(true);
-    router.push('/'); // Suuname dashboardile
+    router.push("/"); // Suuname dashboardile
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken'); // Eemaldame tokeni
+    localStorage.removeItem("authToken"); // Eemaldame tokeni
     setIsAuthenticated(false);
-    router.replace('/login'); // Suuname login-lehele
+    router.replace("/login"); // Suuname login-lehele
   };
 
   if (loading) {
