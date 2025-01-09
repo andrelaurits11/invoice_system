@@ -103,10 +103,7 @@ const LoginForm = () => {
               className="absolute left-0 top-0 w-[57rem] max-w-none rounded-md bg-white/5 ring-1 ring-white/10"
             />
           </div>
-          <div className="class">
-            <h1>sdsd
-            </h1>
-          </div>
+          <div className="class"></div>
         </div>
       </div>
     </div>
