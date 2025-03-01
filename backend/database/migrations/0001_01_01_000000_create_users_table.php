@@ -19,6 +19,12 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            $table->string('phone')->nullable();
+            $table->string('address')->nullable();
+            $table->string('address2')->nullable();
+            $table->string('state')->nullable();
+            $table->string('zip')->nullable();
+            $table->string('country')->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -42,8 +48,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
-        Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('users');
     }
 };

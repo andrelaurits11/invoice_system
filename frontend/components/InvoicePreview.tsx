@@ -8,9 +8,10 @@ import {
   StyleSheet,
   PDFViewer,
   Image,
+  pdf,
 } from '@react-pdf/renderer';
 
-// Stiilid PDF-i jaoks
+// Stiilide määratlus PDF jaoks
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -23,7 +24,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: 20,
   },
-
   companyInfo: {
     flexDirection: 'column',
     alignItems: 'flex-end',
@@ -106,7 +106,19 @@ const styles = StyleSheet.create({
   },
 });
 
-// Tüüpide määratlemine
+// Tüüpide määratlus
+interface Profile {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  address2: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  businessname: string;
+}
 interface CompanyDetails {
   name: string;
   email: string;
@@ -134,18 +146,20 @@ interface InvoiceDetails {
 interface PDFViewerProps {
   companyDetails: CompanyDetails;
   invoiceDetails: InvoiceDetails;
+  profile: Profile;
 }
 
 // PDF-i sisu
 const InvoiceDocument: React.FC<PDFViewerProps> = ({
   companyDetails,
   invoiceDetails,
+  profile,
 }) => (
   <Document>
-    <Page size="A4" style={styles.page}>
+    <Page size='A4' style={styles.page}>
       <View style={styles.header}>
         <Image
-          src="/Test-IMG.png"
+          src='/Test-IMG.png'
           style={{
             width: 80,
             height: 80,
@@ -154,14 +168,14 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({
           }}
         />
         <View style={styles.companyInfo}>
-          <Text style={{ fontWeight: 'bold' }}>Company</Text>
-          <Text>{companyDetails.name}</Text>
-          <Text>{companyDetails.address1}</Text>
-          <Text>{companyDetails.address2}</Text>
+          <Text style={{ fontWeight: 'bold' }}>{profile.businessname}</Text>
+          <Text>{}</Text>
+          <Text>{profile.address}</Text>
+          <Text>{profile.address2}</Text>
           <Text>
-            {companyDetails.city}, {companyDetails.state} {companyDetails.zip}
+            {profile.city}, {profile.state}, {profile.zip}
           </Text>
-          <Text>{companyDetails.country}</Text>
+          <Text>{profile.country}</Text>
         </View>
       </View>
 
@@ -173,7 +187,7 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({
               (sum, item) =>
                 sum +
                 parseFloat(item.rate || '0') * parseFloat(item.quantity || '0'),
-              0
+              0,
             )
             .toFixed(2)}
           €
@@ -235,18 +249,62 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({
   </Document>
 );
 
-// PDF Viewer Component
-const InvoicePreviewPDF: React.FC<PDFViewerProps> = ({
-  companyDetails,
-  invoiceDetails,
-}) => {
-  return (
-    <PDFViewer style={{ width: '100%', height: '500px' }}>
+const generatePDF = async (
+  companyDetails: CompanyDetails,
+  invoiceDetails: InvoiceDetails,
+  profile: Profile,
+) => {
+  try {
+    const blob = await pdf(
       <InvoiceDocument
         companyDetails={companyDetails}
         invoiceDetails={invoiceDetails}
-      />
-    </PDFViewer>
+        profile={profile}
+      />,
+    ).toBlob(); // Genereerib PDF-i blob'i
+
+    // PDF-i kuvamine eelvaates või allalaadimine
+    const pdfUrl = URL.createObjectURL(blob);
+
+    // Kui kõik on õigesti seadistatud, saad selle lingi kaudu alla laadida või kuvada
+    const a = document.createElement('a');
+    a.href = pdfUrl;
+    a.download = 'invoice.pdf';
+    a.click(); // Käivitab allalaadimise
+
+    // Võid ka kuvada PDF-e eelvaate kohta
+    const pdfViewer = document.getElementById('pdf-preview');
+    if (pdfViewer) {
+      pdfViewer.setAttribute('src', pdfUrl);
+    }
+
+    console.log('✅ PDF edukalt genereeritud ja nähtav');
+  } catch (error) {
+    console.error('❌ Vean PDF-i genereerimisel:', error);
+  }
+};
+
+// InvoicePreviewPDF komponent
+const InvoicePreviewPDF: React.FC<PDFViewerProps> = ({
+  companyDetails,
+  invoiceDetails,
+  profile,
+}) => {
+  const handleGeneratePDF = () => {
+    generatePDF(companyDetails, invoiceDetails, profile);
+  };
+
+  return (
+    <>
+      <PDFViewer style={{ width: '100%', height: '500px' }}>
+        <InvoiceDocument
+          companyDetails={companyDetails}
+          invoiceDetails={invoiceDetails}
+          profile={profile}
+        />
+      </PDFViewer>
+      <button onClick={handleGeneratePDF}>Downlodddad PDF</button>
+    </>
   );
 };
 

@@ -6,7 +6,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="bg-gray-100 min-h-screen w-full">
+    <div className='min-h-screen w-full bg-gray-100'>
       <main>{children}</main>
     </div>
   );

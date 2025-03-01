@@ -55,7 +55,7 @@ export default function NewClient() {
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(
-          err.response?.data?.message || 'Kliendi salvestamine ebaõnnestus!'
+          err.response?.data?.message || 'Kliendi salvestamine ebaõnnestus!',
         );
       } else {
         setError('Tekkis ootamatu viga!');
@@ -65,132 +65,132 @@ export default function NewClient() {
 
   return (
     <Layout>
-      <div className="flex flex-col h-screen">
-        <div className="flex flex-1">
-          <div className="bg-gray-100 w-1/5 p-6 flex flex-col">
-            <h2 className="text-xl font-bold mb-6">Arved</h2>
-            <nav className="flex flex-col space-y-4">
+      <div className='flex h-screen flex-col'>
+        <div className='flex flex-1'>
+          <div className='flex w-1/5 flex-col bg-gray-100 p-6'>
+            <h2 className='mb-6 text-xl font-bold'>Arved</h2>
+            <nav className='flex flex-col space-y-4'>
               <button
                 onClick={() => router.push('/')}
-                className="text-gray-600"
+                className='text-gray-600'
               >
                 Töölaud
               </button>
               <button
                 onClick={() => router.push('/invoices')}
-                className="text-gray-600"
+                className='text-gray-600'
               >
                 Arved
               </button>
               <button
                 onClick={() => router.push('/clients')}
-                className="text-blue-500 font-semibold"
+                className='font-semibold text-blue-500'
               >
                 Kliendid
               </button>
               <button
                 onClick={logout}
-                className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+                className='mt-4 rounded bg-red-500 px-4 py-2 text-white'
               >
                 Logout
               </button>
             </nav>
           </div>
 
-          <div className="flex-1 bg-gray-50 p-6 flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+          <div className='flex flex-1 flex-col bg-gray-50 p-6'>
+            <div className='mb-6 flex items-center justify-between'>
               <input
-                type="text"
-                placeholder="Otsi..."
-                className="w-1/3 p-2 border border-gray-300 rounded"
+                type='text'
+                placeholder='Otsi...'
+                className='w-1/3 rounded border border-gray-300 p-2'
               />
-              <Link href="/new-client">
-                <button className="bg-blue-500 text-white px-4 py-2 rounded">
+              <Link href='/new-client'>
+                <button className='rounded bg-blue-500 px-4 py-2 text-white'>
                   Uus Klient
                 </button>
               </Link>
             </div>
 
-            <div className="bg-white p-6 shadow rounded lg:col-span-2">
-              <h2 className="font-semibold text-lg mb-4">Ettevõtte Andmed</h2>
-              <form onSubmit={saveClient} className="grid grid-cols-2 gap-4">
+            <div className='rounded bg-white p-6 shadow lg:col-span-2'>
+              <h2 className='mb-4 text-lg font-semibold'>Ettevõtte Andmed</h2>
+              <form onSubmit={saveClient} className='grid grid-cols-2 gap-4'>
                 <input
-                  className="border p-2 rounded w-full col-span-2"
-                  placeholder="Name"
-                  name="name"
+                  className='col-span-2 w-full rounded border p-2'
+                  placeholder='Name'
+                  name='name'
                   value={companyDetails.name}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded w-full col-span-2"
-                  placeholder="Contact Person"
-                  name="contactPerson"
+                  className='col-span-2 w-full rounded border p-2'
+                  placeholder='Contact Person'
+                  name='contactPerson'
                   value={companyDetails.contactPerson}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded"
-                  placeholder="Email"
-                  name="email"
+                  className='rounded border p-2'
+                  placeholder='Email'
+                  name='email'
                   value={companyDetails.email}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded"
-                  placeholder="Phone"
-                  name="phone"
+                  className='rounded border p-2'
+                  placeholder='Phone'
+                  name='phone'
                   value={companyDetails.phone}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded"
-                  placeholder="Address 1"
-                  name="address1"
+                  className='rounded border p-2'
+                  placeholder='Address 1'
+                  name='address1'
                   value={companyDetails.address1}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded"
-                  placeholder="Address 2"
-                  name="address2"
+                  className='rounded border p-2'
+                  placeholder='Address 2'
+                  name='address2'
                   value={companyDetails.address2}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded"
-                  placeholder="City"
-                  name="city"
+                  className='rounded border p-2'
+                  placeholder='City'
+                  name='city'
                   value={companyDetails.city}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded"
-                  placeholder="State"
-                  name="state"
+                  className='rounded border p-2'
+                  placeholder='State'
+                  name='state'
                   value={companyDetails.state}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded"
-                  placeholder="Zip"
-                  name="zip"
+                  className='rounded border p-2'
+                  placeholder='Zip'
+                  name='zip'
                   value={companyDetails.zip}
                   onChange={handleCompanyChange}
                 />
                 <input
-                  className="border p-2 rounded"
-                  placeholder="Country"
-                  name="country"
+                  className='rounded border p-2'
+                  placeholder='Country'
+                  name='country'
                   value={companyDetails.country}
                   onChange={handleCompanyChange}
                 />
                 <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded col-span-2"
+                  type='submit'
+                  className='col-span-2 rounded bg-blue-500 px-4 py-2 text-white'
                 >
                   Salvesta
                 </button>
-                {error && <p className="text-red-500 col-span-2">{error}</p>}
+                {error && <p className='col-span-2 text-red-500'>{error}</p>}
               </form>
             </div>
           </div>

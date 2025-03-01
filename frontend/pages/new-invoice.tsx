@@ -5,7 +5,29 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import axios from 'axios';
+import Select from 'react-select';
+import { useEffect } from 'react';
+import { pdf } from '@react-pdf/renderer';
 
+interface InvoiceDetails {
+  dueDate: string;
+  invoiceID: string;
+  items: InvoiceItem[];
+  pdf?: string; // Optional property for PDF (base64 or file URL)
+}
+
+interface Profile {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  address2: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  businessname: string;
+}
 interface CompanyDetails {
   name: string;
   email: string;
@@ -43,10 +65,35 @@ interface Client {
   country: string;
 }
 
+const fetchProfileData = async () => {
+  try {
+    const response = await axios.get('http://localhost:8000/api/profile', {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      },
+    });
+    return response.data; // Siit tuleb kasutaja profiili andmed
+  } catch (error) {
+    console.error('Error fetching profile data:', error);
+    return null;
+  }
+};
+
 export default function NewInvoice() {
   const router = useRouter();
   const { logout } = useAuth();
-
+  const [profile, setProfile] = useState<Profile>({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    address2: '',
+    city: '',
+    state: '',
+    zip: '',
+    country: '',
+    businessname: '',
+  });
   const [companyDetails, setCompanyDetails] = useState<CompanyDetails>({
     name: '',
     email: '',
@@ -68,8 +115,16 @@ export default function NewInvoice() {
   const [clients, setClients] = useState<Client[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
 
+  useEffect(() => {
+    const getProfileData = async () => {
+      const profileData = await fetchProfileData();
+      setProfile(profileData);
+    };
+    getProfileData();
+  }, []);
+
   const handleCompanyChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, value } = e.target;
     setCompanyDetails((prev) => ({ ...prev, [name]: value }));
@@ -82,12 +137,12 @@ export default function NewInvoice() {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             },
-          }
+          },
         );
 
         if (response.data) {
           const filteredClients = response.data.filter((client: Client) =>
-            client.company_name.toLowerCase().includes(value.toLowerCase())
+            client.company_name.toLowerCase().includes(value.toLowerCase()),
           );
           setClients(filteredClients);
           setShowDropdown(true);
@@ -96,14 +151,6 @@ export default function NewInvoice() {
           setShowDropdown(false);
         }
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.error(
-            'Error fetching clients:',
-            error.response?.data || error.message
-          );
-        } else {
-          console.error('Unexpected error:', error);
-        }
         setClients([]);
         setShowDropdown(false);
       }
@@ -112,7 +159,6 @@ export default function NewInvoice() {
       setShowDropdown(false);
     }
   };
-
   const selectClient = (client: Client) => {
     setCompanyDetails({
       name: client.company_name,
@@ -130,7 +176,7 @@ export default function NewInvoice() {
 
   const handleInvoiceChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     const { name, value } = e.target;
     const updatedItems = [...invoiceDetails.items];
@@ -150,6 +196,32 @@ export default function NewInvoice() {
       ...prev,
       items: prev.items.filter((_, i) => i !== index),
     }));
+  };
+
+  const generatePDF = async (): Promise<string | null> => {
+    try {
+      // Generating the PDF blob
+      const blob = await pdf(
+        <InvoicePreview
+          companyDetails={companyDetails}
+          invoiceDetails={invoiceDetails}
+          profile={profile}
+        />,
+      ).toBlob();
+
+      // Convert the blob to base64
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('❌ Vean PDF-i genereerimisel:', error);
+      return null;
+    }
   };
 
   const saveInvoice = async () => {
@@ -181,7 +253,7 @@ export default function NewInvoice() {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       if (response.status === 201) {
@@ -192,115 +264,173 @@ export default function NewInvoice() {
       alert('Failed to save invoice.');
     }
   };
+
   const saveAndSendInvoice = async () => {
     try {
-      await saveInvoice(); // Save the invoice first
-      await axios.post(
-        'http://localhost:8000/api/invoices/send',
-        {
-          email: companyDetails.email,
-          invoiceDetails: {
-            invoice_id: invoiceDetails.invoiceID,
-          },
-        },
+      // Esiteks salvestame arve
+      const payload = {
+        invoice_id: invoiceDetails.invoiceID,
+        company_name: companyDetails.name,
+        email: companyDetails.email,
+        phone: companyDetails.phone,
+        address1: companyDetails.address1,
+        address2: companyDetails.address2,
+        city: companyDetails.city,
+        state: companyDetails.state,
+        zip: companyDetails.zip,
+        country: companyDetails.country,
+        due_date: invoiceDetails.dueDate,
+        items: invoiceDetails.items.map((item) => ({
+          description: item.description,
+          rate: parseFloat(item.rate) || 0,
+          quantity: parseInt(item.quantity) || 0,
+        })),
+      };
+
+      // Salvestame arve
+      const saveResponse = await axios.post(
+        'http://localhost:8000/api/invoices',
+        payload,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
-      alert('Invoice saved and sent successfully!');
+      if (saveResponse.status !== 201) {
+        throw new Error('Arve salvestamine ebaõnnestus.');
+      }
+
+      console.log('✅ Arve salvestatud edukalt!');
+
+      // Nüüd genereerime PDF-i
+      console.log('🔍 Genereerin PDF-i...');
+      const pdfBase64 = await generatePDF(); // Genereeri PDF eelvaate põhjal
+      if (!pdfBase64) throw new Error('PDF-i genereerimine ebaõnnestus');
+
+      console.log('✅ PDF genereeritud edukalt!');
+
+      // Saada arve koos PDF-iga
+      const requestData = {
+        email: companyDetails.email,
+        invoiceDetails: {
+          invoiceID: invoiceDetails.invoiceID,
+        },
+        pdf: pdfBase64, // PDF andmed base64 formaadis
+      };
+
+      console.log('📤 Saadetavad andmed:', requestData);
+
+      // Saadame e-posti
+      const sendResponse = await axios.post(
+        'http://localhost:8000/api/invoices/send',
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      console.log('✅ Serveri vastus:', sendResponse.data);
+      alert('Arve salvestatud ja saadetud edukalt!');
       router.push('/invoices');
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.error(
-          'Error sending invoice:',
-          error.response?.data || error.message
-        );
-        alert(error.response?.data?.message || 'Failed to send the invoice.');
-      } else {
-        console.error('Unknown error:', error);
-        alert('An unknown error occurred. Please try again.');
-      }
+      console.error('❌ Tekkinud viga:', error);
+      alert('Arve salvestamine ja saatmine ebaõnnestus.');
+    }
+  };
+
+  const options = [
+    { value: 'maksutud', label: 'Maksutud' },
+    { value: 'ootel', label: 'Ootel' },
+  ];
+
+  const handleChange = (
+    selectedOption: { value: string; label: string } | null,
+  ) => {
+    if (selectedOption) {
+      console.log('Selected:', selectedOption.value);
     }
   };
 
   return (
     <Layout>
-      <div className="flex flex-col h-screen">
-        <div className="flex flex-1">
-          <div className="bg-gray-100 w-1/5 p-6 flex flex-col">
-            <h2 className="text-xl font-bold mb-6">Arved</h2>
-            <nav className="flex flex-col space-y-4">
+      <div className='flex h-screen flex-col'>
+        <div className='flex flex-1'>
+          <div className='flex w-1/5 flex-col bg-gray-100 p-6'>
+            <h2 className='mb-6 text-xl font-bold'>Arved</h2>
+            <nav className='flex flex-col space-y-4'>
               <button
                 onClick={() => router.push('/')}
-                className="text-gray-600"
+                className='text-gray-600'
               >
                 Töölaud
               </button>
               <button
                 onClick={() => router.push('/invoices')}
-                className="text-blue-500 font-semibold"
+                className='font-semibold text-blue-500'
               >
                 Arved
               </button>
               <button
                 onClick={() => router.push('/clients')}
-                className="text-gray-600"
+                className='text-gray-600'
               >
                 Kliendid
               </button>
               <button
                 onClick={logout}
-                className="bg-red-500 text-white px-4 py-2 rounded mt-4"
+                className='mt-4 rounded bg-red-500 px-4 py-2 text-white'
               >
                 Logout
               </button>
             </nav>
           </div>
 
-          <div className="flex-1 bg-gray-50 p-6 flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+          <div className='flex flex-1 flex-col bg-gray-50 p-6'>
+            <div className='mb-6 flex items-center justify-between'>
               <input
-                type="text"
-                placeholder="Otsi..."
-                className="w-1/3 p-2 border border-gray-300 rounded"
+                type='text'
+                placeholder='Otsi...'
+                className='w-1/3 rounded border border-gray-300 p-2'
               />
-              <Link href="/new-invoice">
-                <button className="bg-blue-500 text-white px-4 py-2 rounded">
+              <Link href='/new-invoice'>
+                <button className='rounded bg-blue-500 px-4 py-2 text-white'>
                   Uus Arve
                 </button>
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1">
-              <div className="bg-white p-6 shadow rounded lg:col-span-2">
-                <h2 className="font-semibold text-lg mb-4">Ettevõtte Andmed</h2>
-                <form className="grid grid-cols-2 gap-4">
-                  <div className="relative">
+            <div className='grid flex-1 grid-cols-1 gap-6 lg:grid-cols-3'>
+              <div className='rounded bg-white p-6 shadow lg:col-span-2'>
+                <h2 className='mb-4 text-lg font-semibold'>Ettevõtte Andmed</h2>
+                <form className='grid grid-cols-2 gap-4'>
+                  <div className='relative'>
                     <input
-                      className="border p-2 rounded w-full"
-                      placeholder="Search for a company"
-                      name="name"
+                      className='w-full rounded border p-2'
+                      placeholder='Search for a company'
+                      name='name'
                       value={companyDetails.name}
                       onChange={handleCompanyChange}
                     />
                     {showDropdown && (
-                      <ul className="absolute z-50 bg-white border border-gray-300 rounded w-full max-h-40 overflow-y-auto shadow-lg">
+                      <ul className='absolute z-50 max-h-40 w-full overflow-y-auto rounded border border-gray-300 bg-white shadow-lg'>
                         {clients.length > 0 ? (
                           clients.map((client) => (
                             <li
                               key={client.id}
-                              className="p-2 hover:bg-gray-100 cursor-pointer text-black"
+                              className='cursor-pointer p-2 text-black hover:bg-gray-100'
                               onClick={() => selectClient(client)}
                             >
                               {client.company_name || 'Unnamed Client'}
                             </li>
                           ))
                         ) : (
-                          <li className="p-2 text-gray-500">
+                          <li className='p-2 text-gray-500'>
                             No results found
                           </li>
                         )}
@@ -309,68 +439,74 @@ export default function NewInvoice() {
                   </div>
 
                   <input
-                    className="border p-2 rounded"
-                    placeholder="Email"
-                    name="email"
+                    className='rounded border p-2'
+                    placeholder='Email'
+                    name='email'
                     value={companyDetails.email}
                     onChange={handleCompanyChange}
                   />
                   <input
-                    className="border p-2 rounded"
-                    placeholder="Phone"
-                    name="phone"
+                    className='rounded border p-2'
+                    placeholder='Phone'
+                    name='phone'
                     value={companyDetails.phone}
                     onChange={handleCompanyChange}
                   />
                   <input
-                    className="border p-2 rounded"
-                    placeholder="Address 1"
-                    name="address1"
+                    className='rounded border p-2'
+                    placeholder='Address 1'
+                    name='address1'
                     value={companyDetails.address1}
                     onChange={handleCompanyChange}
                   />
                   <input
-                    className="border p-2 rounded"
-                    placeholder="Address 2"
-                    name="address2"
+                    className='rounded border p-2'
+                    placeholder='Address 2'
+                    name='address2'
                     value={companyDetails.address2}
                     onChange={handleCompanyChange}
                   />
                   <input
-                    className="border p-2 rounded"
-                    placeholder="City"
-                    name="city"
+                    className='rounded border p-2'
+                    placeholder='City'
+                    name='city'
                     value={companyDetails.city}
                     onChange={handleCompanyChange}
                   />
                   <input
-                    className="border p-2 rounded"
-                    placeholder="State"
-                    name="state"
+                    className='rounded border p-2'
+                    placeholder='State'
+                    name='state'
                     value={companyDetails.state}
                     onChange={handleCompanyChange}
                   />
                   <input
-                    className="border p-2 rounded"
-                    placeholder="Zip"
-                    name="zip"
+                    className='rounded border p-2'
+                    placeholder='Zip'
+                    name='zip'
                     value={companyDetails.zip}
                     onChange={handleCompanyChange}
                   />
                   <input
-                    className="border p-2 rounded"
-                    placeholder="Country"
-                    name="country"
+                    className='rounded border p-2'
+                    placeholder='Country'
+                    name='country'
                     value={companyDetails.country}
                     onChange={handleCompanyChange}
                   />
                 </form>
-                <h2 className="font-semibold text-lg mb-4 mt-6">Arve Andmed</h2>
+                <h2 className='mb-4 mt-6 text-lg font-semibold'>Arve Andmed</h2>
+
                 <form>
+                  <Select
+                    options={options}
+                    onChange={handleChange}
+                    placeholder='Vali staatus'
+                  />
                   <input
-                    className="border p-2 w-full mb-3 rounded"
-                    placeholder="Maksetähtaeg"
-                    name="dueDate"
+                    className='mb-3 w-full rounded border p-2'
+                    placeholder='Maksetähtaeg'
+                    name='dueDate'
                     value={invoiceDetails.dueDate}
                     onChange={(e) =>
                       setInvoiceDetails({
@@ -380,9 +516,9 @@ export default function NewInvoice() {
                     }
                   />
                   <input
-                    className="border p-2 w-full mb-3 rounded"
-                    placeholder="Arve ID"
-                    name="invoiceID"
+                    className='mb-3 w-full rounded border p-2'
+                    placeholder='Arve ID'
+                    name='invoiceID'
                     value={invoiceDetails.invoiceID}
                     onChange={(e) =>
                       setInvoiceDetails({
@@ -392,39 +528,39 @@ export default function NewInvoice() {
                     }
                   />
                   {invoiceDetails.items.map((item, index) => (
-                    <div key={index} className="grid grid-cols-12 gap-4 mb-3">
+                    <div key={index} className='mb-3 grid grid-cols-12 gap-4'>
                       <input
-                        className="border p-2 col-span-5 rounded"
-                        placeholder="Kirjeldus"
-                        name="description"
+                        className='col-span-5 rounded border p-2'
+                        placeholder='Kirjeldus'
+                        name='description'
                         value={item.description}
                         onChange={(e) => handleInvoiceChange(e, index)}
                       />
                       <input
-                        className="border p-2 col-span-3 rounded"
-                        placeholder="Hind"
-                        name="rate"
+                        className='col-span-3 rounded border p-2'
+                        placeholder='Hind'
+                        name='rate'
                         value={item.rate}
                         onChange={(e) => handleInvoiceChange(e, index)}
                       />
                       <input
-                        className="border p-2 col-span-2 rounded"
-                        placeholder="Kogus"
-                        name="quantity"
+                        className='col-span-2 rounded border p-2'
+                        placeholder='Kogus'
+                        name='quantity'
                         value={item.quantity}
                         onChange={(e) => handleInvoiceChange(e, index)}
                       />
-                      <div className="flex col-span-2 justify-center space-x-2 items-center h-full">
+                      <div className='col-span-2 flex h-full items-center justify-center space-x-2'>
                         <button
-                          type="button"
-                          className="bg-red-500 text-white w-6 h-6 flex items-center justify-center rounded-full"
+                          type='button'
+                          className='flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white'
                           onClick={() => removeItem(index)}
                         >
                           -
                         </button>
                         <button
-                          type="button"
-                          className="bg-blue-500 text-white w-6 h-6 flex items-center justify-center rounded-full"
+                          type='button'
+                          className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-white'
                           onClick={addItem}
                         >
                           +
@@ -434,23 +570,26 @@ export default function NewInvoice() {
                   ))}
                 </form>
               </div>
-              <div className="bg-white p-6 shadow rounded">
-                <InvoicePreview
-                  companyDetails={companyDetails}
-                  invoiceDetails={invoiceDetails}
-                />
+              <div className='rounded bg-white p-6 shadow'>
+                <div id='invoice-preview'>
+                  <InvoicePreview
+                    companyDetails={companyDetails}
+                    invoiceDetails={invoiceDetails}
+                    profile={profile}
+                  />
+                </div>
               </div>
             </div>
-            <div className="flex justify-end items-center mt-6 space-x-4">
+            <div className='mt-6 flex items-center justify-end space-x-4'>
               <button
                 onClick={saveInvoice}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                className='rounded bg-gray-300 px-4 py-2 text-gray-700'
               >
                 Salvesta
               </button>
               <button
                 onClick={saveAndSendInvoice}
-                className="bg-blue-500 text-white px-4 py-2 rounded"
+                className='rounded bg-blue-500 px-4 py-2 text-white'
               >
                 Salvesta ja Saada
               </button>
