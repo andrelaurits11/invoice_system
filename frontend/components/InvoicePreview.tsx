@@ -307,5 +307,5 @@ const InvoicePreviewPDF: React.FC<PDFViewerProps> = ({
     </>
   );
 };
-
+export { InvoiceDocument };
 export default InvoicePreviewPDF;

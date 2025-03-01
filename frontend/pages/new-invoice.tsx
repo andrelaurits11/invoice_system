@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Layout from '../components/Layout';
-import InvoicePreview from '../components/InvoicePreview';
+import InvoicePreview, { InvoiceDocument } from '../components/InvoicePreview';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
@@ -198,28 +198,39 @@ export default function NewInvoice() {
     }));
   };
 
-  const generatePDF = async (): Promise<string | null> => {
+  const generatePDF = async (
+    companyDetails: CompanyDetails,
+    invoiceDetails: InvoiceDetails,
+    profile: Profile,
+  ): Promise<Blob | null> => {
     try {
-      // Generating the PDF blob
-      const blob = await pdf(
-        <InvoicePreview
+      console.log('🛠 Kontrollime `InvoicePreview` andmeid:', {
+        companyDetails,
+        invoiceDetails,
+        profile,
+      });
+
+      const pdfDoc = (
+        <InvoiceDocument
           companyDetails={companyDetails}
           invoiceDetails={invoiceDetails}
           profile={profile}
-        />,
-      ).toBlob();
+        />
+      );
 
-      // Convert the blob to base64
-      const reader = new FileReader();
-      return new Promise((resolve, reject) => {
-        reader.onloadend = () => {
-          resolve(reader.result as string);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
+      console.log('✅ `InvoicePreview` JSX:', pdfDoc);
+
+      const pdfBlob = await pdf(pdfDoc).toBlob();
+
+      if (!pdfBlob || pdfBlob.size === 0) {
+        throw new Error('❌ PDF genereerimine ebaõnnestus, fail on tühi.');
+      }
+
+      console.log('✅ PDF edukalt loodud! Suurus:', pdfBlob.size, 'baiti');
+
+      return pdfBlob;
     } catch (error) {
-      console.error('❌ Vean PDF-i genereerimisel:', error);
+      console.error('❌ Viga PDF genereerimisel:', error);
       return null;
     }
   };
@@ -267,27 +278,40 @@ export default function NewInvoice() {
 
   const saveAndSendInvoice = async () => {
     try {
-      // Esiteks salvestame arve
+      console.log('🚀 Alustan arve salvestamist ja saatmist...');
+
+      // 1️⃣ Koosta andmed arve salvestamiseks
+      const invoiceID = invoiceDetails.invoiceID || 'default';
+      const fileName = `invoice_${invoiceID}.pdf`; // Failinimi vastavalt invoiceID-le
+
       const payload = {
-        invoice_id: invoiceDetails.invoiceID,
-        company_name: companyDetails.name,
-        email: companyDetails.email,
-        phone: companyDetails.phone,
-        address1: companyDetails.address1,
-        address2: companyDetails.address2,
-        city: companyDetails.city,
-        state: companyDetails.state,
-        zip: companyDetails.zip,
-        country: companyDetails.country,
-        due_date: invoiceDetails.dueDate,
+        invoice_id: invoiceID,
+        company_name: companyDetails.name || 'MISSING_NAME',
+        email: companyDetails.email || 'MISSING_EMAIL',
+        phone: String(companyDetails.phone || ''),
+        address1: companyDetails.address1 || '',
+        address2: companyDetails.address2 || '',
+        city: companyDetails.city || '',
+        state: companyDetails.state || '',
+        zip: String(companyDetails.zip || ''),
+        country: companyDetails.country || '',
+        due_date: invoiceDetails.dueDate || 'MISSING_DATE',
         items: invoiceDetails.items.map((item) => ({
-          description: item.description,
-          rate: parseFloat(item.rate) || 0,
-          quantity: parseInt(item.quantity) || 0,
+          description: item.description || 'MISSING_DESCRIPTION',
+          rate: isNaN(parseFloat(item.rate)) ? 0 : parseFloat(item.rate),
+          quantity: isNaN(parseInt(item.quantity))
+            ? 0
+            : parseInt(item.quantity),
         })),
       };
 
-      // Salvestame arve
+      console.log(
+        '📦 Saadan payload serverisse:',
+        JSON.stringify(payload, null, 2),
+      );
+
+      // 2️⃣ Salvesta arve serverisse
+      console.log('📤 Saadan arve andmed serverisse...');
       const saveResponse = await axios.post(
         'http://localhost:8000/api/invoices',
         payload,
@@ -300,30 +324,67 @@ export default function NewInvoice() {
       );
 
       if (saveResponse.status !== 201) {
-        throw new Error('Arve salvestamine ebaõnnestus.');
+        throw new Error('❌ Arve salvestamine ebaõnnestus.');
       }
 
       console.log('✅ Arve salvestatud edukalt!');
 
-      // Nüüd genereerime PDF-i
+      // 3️⃣ Genereeri PDF
       console.log('🔍 Genereerin PDF-i...');
-      const pdfBase64 = await generatePDF(); // Genereeri PDF eelvaate põhjal
-      if (!pdfBase64) throw new Error('PDF-i genereerimine ebaõnnestus');
+      const pdfBlob = await generatePDF(
+        companyDetails,
+        invoiceDetails,
+        profile,
+      );
 
-      console.log('✅ PDF genereeritud edukalt!');
+      if (!pdfBlob) {
+        console.error('❌ `generatePDF` tagastas `null`, PDF-i ei loodud!');
+        alert('PDF genereerimine ebaõnnestus!');
+        return;
+      }
 
-      // Saada arve koos PDF-iga
-      const requestData = {
-        email: companyDetails.email,
-        invoiceDetails: {
-          invoiceID: invoiceDetails.invoiceID,
-        },
-        pdf: pdfBase64, // PDF andmed base64 formaadis
+      console.log('✅ PDF genereeritud! Suurus:', pdfBlob.size, 'baiti');
+
+      // 📂 4️⃣ Ava PDF uues aknas
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      window.open(pdfUrl, '_blank');
+
+      // 📥 5️⃣ Laadi PDF alla vastava nimega
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      console.log(`✅ PDF edukalt alla laaditud nimega: ${fileName}`);
+
+      const blobToBase64 = (blob: Blob): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = () => {
+            if (typeof reader.result === 'string') {
+              resolve(reader.result.split(',')[1]); // Eemaldame data: prefixi
+            } else {
+              reject(new Error('Base64 konverteerimine ebaõnnestus'));
+            }
+          };
+          reader.onerror = reject;
+        });
       };
 
-      console.log('📤 Saadetavad andmed:', requestData);
+      // 6️⃣ Saada PDF e-postiga
+      const pdfBase64 = await blobToBase64(pdfBlob);
+      const requestData = {
+        email: companyDetails.email || 'MISSING_EMAIL',
+        invoiceDetails: {
+          invoiceID: invoiceID,
+        },
+        pdf: pdfBase64, // Base64 formaadis PDF
+        fileName: fileName, // Failinimi lisatakse e-kirja andmetesse
+      };
 
-      // Saadame e-posti
+      console.log('📤 Saadan arve e-mailiga...');
       const sendResponse = await axios.post(
         'http://localhost:8000/api/invoices/send',
         requestData,
@@ -334,13 +395,20 @@ export default function NewInvoice() {
           },
         },
       );
+      console.log(`✅ Serveri vastus:`, sendResponse.data);
 
-      console.log('✅ Serveri vastus:', sendResponse.data);
+      console.log(`✅ Arve saadetud e-mailiga failinimega: ${fileName}`);
       alert('Arve salvestatud ja saadetud edukalt!');
       router.push('/invoices');
     } catch (error) {
       console.error('❌ Tekkinud viga:', error);
-      alert('Arve salvestamine ja saatmine ebaõnnestus.');
+
+      if (error.response) {
+        console.error('⚠️ Serveri vastus:', error.response.data);
+        alert(`Viga: ${JSON.stringify(error.response.data)}`);
+      } else {
+        alert('Arve salvestamine ja saatmine ebaõnnestus.');
+      }
     }
   };
 
@@ -592,6 +660,13 @@ export default function NewInvoice() {
                 className='rounded bg-blue-500 px-4 py-2 text-white'
               >
                 Salvesta ja Saada
+              </button>
+              <button
+                onClick={() =>
+                  generatePDF(companyDetails, invoiceDetails, profile)
+                }
+              >
+                Laadi alla PDF
               </button>
             </div>
           </div>
