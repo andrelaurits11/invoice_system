@@ -422,7 +422,7 @@ export default function NewInvoice() {
     } catch (error) {
       console.error('❌ Tekkinud viga:', error);
 
-      if (error.response) {
+      if (axios.isAxiosError(error) && error.response) {
         console.error('⚠️ Serveri vastus:', error.response.data);
         alert(`Viga: ${JSON.stringify(error.response.data)}`);
       } else {
