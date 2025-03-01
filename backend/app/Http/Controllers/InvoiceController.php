@@ -166,52 +166,58 @@ class InvoiceController extends Controller
      */
     public function sendInvoice(Request $request)
 {
-    // Kontrollige, kas kõik vajalikud andmed on olemas
-    if (!$request->has('email') || !$request->has('invoiceDetails') || !$request->has('pdf')) {
+    // Kontrollime, kas kõik vajalikud andmed on olemas
+    if (!$request->has('email') || !$request->has('invoiceDetails') || !$request->has('pdf') || !$request->has('user_id')) {
         return response()->json(['error' => 'Puuduvad vajalikud andmed.'], 400); // 400 Bad Request
     }
 
     $email = $request->email; // Saaja e-posti aadress
     $invoiceID = $request->invoiceDetails['invoiceID']; // Arve ID
-    $pdf = $request->pdf; // PDF, mis saadeti (näiteks base64 formaadis)
+    $pdf = $request->pdf; // PDF (base64 formaadis)
+    $userID = $request->user_id; // Kasutaja ID (saatja määramiseks)
 
-    // PDF-i salvestamine ajutiselt
-    $pdfPath = 'invoices/' . $invoiceID . '.pdf';
+    // Otsime kasutaja andmebaasist
+    $user = User::find($userID);
+    if (!$user) {
+        return response()->json(['error' => 'Saatja ei leitud.'], 404); // 404 Not Found
+    }
 
-// PDF-i salvestamine
-Storage::put($pdfPath, base64_decode($pdf));
+    // Määrame failinime ja salvestuskoha
+    $pdfFileName = 'invoice_' . $invoiceID . '.pdf';
+    $pdfPath = 'invoices/' . $pdfFileName;
 
-// ✅ Kontrolli, kas fail salvestati edukalt
-if (!Storage::exists($pdfPath)) {
-    \Log::error("❌ PDF salvestamine ebaõnnestus: $pdfPath");
-    return response()->json(['error' => 'PDF salvestamine ebaõnnestus.'], 500);
-}
- 
-    // Siinkohal eemaldame kasutaja leidmise ja kontrollimise osa.
-    // Me ei kontrolli enam, kas kasutajat on olemas, vaid saadame e-kirja iga aadressile.
+    // Salvestame PDF-i
+    Storage::put($pdfPath, base64_decode($pdf));
 
-    // Pane Mailable'ile kaasa saatja andmed
+    // ✅ Kontrollime, kas fail salvestati edukalt
+    if (!Storage::exists($pdfPath)) {
+        \Log::error("❌ PDF salvestamine ebaõnnestus: $pdfPath");
+        return response()->json(['error' => 'PDF salvestamine ebaõnnestus.'], 500);
+    }
+
+    // Valmistame e-kirja andmed
     $mailData = [
-        'invoiceID' => $invoiceID,
-        'pdf_path' => $pdfPath,
-        'senderEmail' => 'default@example.com',   // Saatja e-posti aadress (või päriselt määratud)
-        'senderName'  => 'Arve Teenus',           // Saatja nimi
+        'invoiceID'   => $invoiceID,
+        'pdf_path'    => $pdfPath,
+        'senderEmail' => $user->email,        // Saatja e-posti aadress users tabelist
+        'senderName'  => $user->businessname, // Saatja ärinimi users tabelist
     ];
 
     try {
         // Saadame e-kirja
-        Mail::to($email)
-            ->send(new InvoiceMail($mailData));
+        Mail::to($email)->send(new InvoiceMail($mailData, $user->email, $user->businessname));
 
-        // Eemaldame ajutise PDF faili
+        // ✅ Kui e-kiri saadeti edukalt, kustutame ajutise faili
         Storage::delete($pdfPath);
 
-        return response()->json(['message' => 'E-mail sent successfully']);
+        return response()->json(['message' => 'E-mail saadetud edukalt!']);
     } catch (\Exception $e) {
-        // Kui on viga meili saatmisel
+        // ❌ Kui e-kirja saatmine ebaõnnestus, logime vea ja jätame faili alles
         \Log::error('E-maili saatmise viga:', ['error' => $e->getMessage()]);
+
         return response()->json(['error' => 'E-maili saatmine ebaõnnestus.'], 500);
     }
 }
+
 
 }

@@ -38,42 +38,40 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);
     // E-kirja saatmine kõikidele aadressidele
     Route::post('/invoices/send', function (Request $request) {
-        // Kontrollige, kas kõik vajalikud andmed on olemas
-        if (!$request->has('email') || !$request->has('invoiceDetails') || !$request->has('pdf')) {
-            return response()->json(['error' => 'Puuduvad vajalikud andmed.'], 400); // 400 Bad Request
+        // ✅ Kontrollime, kas `user_id` eksisteerib
+        if (!$request->has('user_id')) {
+            return response()->json(['error' => 'Kasutaja ID puudub.'], 400);
         }
 
-        $email = $request->email; // Saaja e-posti aadress
-        $invoiceID = $request->invoiceDetails['invoiceID']; // Arve ID
-        $pdf = $request->pdf; // PDF, mis saadeti (näiteks base64 formaadis)
+        // ✅ Logime, et näha, kas `user_id` tuli API päringuga
+        \Log::info('API sai user_id:', ['user_id' => $request->user_id]);
 
-        // PDF-i salvestamine ajutiselt
-        $pdfPath = 'invoices/' . $invoiceID . '.pdf';
-        Storage::put($pdfPath, base64_decode($pdf));
+        // Otsi kasutaja andmebaasist
+        $user = User::find($request->user_id);
+        if (!$user) {
+            return response()->json(['error' => 'Saatja ei leitud.'], 404);
+        }
 
-        // Määrame saatja andmed (ei kontrolli enam kasutajat)
-        $senderEmail = 'sender@example.com';  // Saatja e-posti aadress
-        $senderName = 'Arve Teenus';          // Saatja nimi
+        // Salvestame PDF-i
+        $pdfPath = 'invoices/' . $request->invoiceDetails['invoiceID'] . '.pdf';
+        Storage::put($pdfPath, base64_decode($request->pdf));
 
-        // Pane Mailable'ile kaasa saatja andmed
+        // E-maili andmed
         $mailData = [
-            'invoiceID' => $invoiceID,
-            'pdf_path' => $pdfPath,
-            'senderEmail' => $senderEmail,   // Saatja e-posti aadress
-            'senderName'  => $senderName,    // Saatja nimi
+            'invoiceID'   => $request->invoiceDetails['invoiceID'],
+            'pdf_path'    => $pdfPath,
+            'senderEmail' => $user->email,  // Võtame e-maili Users tabelist
+            'senderName'  => $user->businessname, // Võtame nime Users tabelist
         ];
 
+        // ✅ Logime, et näha, mis andmed meilisaatmisele lähevad
+        \Log::info('Saatmise andmed:', $mailData);
+
         try {
-            // Saadame e-kirja
-            Mail::to($email)
-                ->send(new InvoiceMail($mailData));
-
-            // Eemaldame ajutise PDF faili
+            Mail::to($request->email)->send(new InvoiceMail($mailData));
             Storage::delete($pdfPath);
-
-            return response()->json(['message' => 'E-mail sent successfully']);
+            return response()->json(['message' => 'E-mail saadetud']);
         } catch (\Exception $e) {
-            // Kui on viga meili saatmisel
             \Log::error('E-maili saatmise viga:', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'E-maili saatmine ebaõnnestus.'], 500);
         }

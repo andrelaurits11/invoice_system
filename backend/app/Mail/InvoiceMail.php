@@ -5,7 +5,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Storage;
-use App\Models\User;  // Lisa see rida, et kasutada User mudelit
+use App\Models\User;
 
 class InvoiceMail extends Mailable
 {
@@ -15,32 +15,42 @@ class InvoiceMail extends Mailable
 
     public function __construct($mailData)
     {
-        $this->mailData = $mailData;
+        \Log::info('📧 InvoiceMail konstruktori andmed:', $mailData); // ✅ Logime andmed
+        $this->mailData = $mailData; // ✅ Salvestame saadud andmed
     }
 
     public function build()
-{
-    // Eemaldame kasutaja leidmise osa ja määrame saatja otse
-    $senderEmail = $this->mailData['senderEmail'];  // Saatja e-posti aadress määratakse otse
-    $senderName = $this->mailData['senderName'];    // Saatja nimi määratakse otse
-
-    // Määrame e-kirja saatja aadressi ja nime
-    $this->from($senderEmail, $senderName);
-
-    // Koostame e-kirja
-    $email = $this->subject('Teie arve: ' . $this->mailData['invoiceID'])
-                  ->view('emails.invoice')  // Vaade, mille järgi e-kiri saadetakse
-                  ->with('mailData', $this->mailData);
-
-    // Kontrollime, kas PDF fail on olemas ja lisame selle e-kirja
-    if (isset($this->mailData['pdf_path']) && Storage::exists($this->mailData['pdf_path'])) {
-        $email->attach(Storage::path($this->mailData['pdf_path']), [
-            'as' => 'invoice.pdf',  // Faili nimi e-kirjas
-            'mime' => 'application/pdf',  // MIME tüüp
+    {
+        // ✅ Kontrollime, millised väärtused meil tegelikult on
+        \Log::info('📧 Saatja määramine:', [
+            'senderEmail' => $this->mailData['senderEmail'] ?? 'default@example.com',
+            'senderName'  => $this->mailData['senderName'] ?? 'Default Business',
         ]);
+
+        // ✅ Kasutame andmeid, mis saime konstruktorist
+        $senderEmail = $this->mailData['senderEmail'] ?? 'default@example.com';
+        $senderName = $this->mailData['senderName'] ?? 'Default Business';
+
+        // ✅ Määrame e-kirja saatja aadressi ja nime
+        $this->from($senderEmail, $senderName) // Kasutab .env määratud saatjat
+             ->replyTo($senderEmail, $senderName); // ✅ Lisa `replyTo()`, et vastamine läheks saatjale
+
+        // ✅ Failinimi
+        $invoiceFileName = ($this->mailData['invoiceID'] ?? 'default') . '.pdf';
+
+        // ✅ Koostame e-kirja
+        $email = $this->subject('Teie arve: ' . ($this->mailData['invoiceID'] ?? 'MISSING_ID'))
+                      ->view('emails.invoice')
+                      ->with('mailData', $this->mailData);
+
+        // ✅ Kui PDF eksisteerib, lisame selle e-kirja manuseks
+        if (!empty($this->mailData['pdf_path']) && Storage::exists($this->mailData['pdf_path'])) {
+            $email->attach(Storage::path($this->mailData['pdf_path']), [
+                'as'   => $invoiceFileName, // Failinimi
+                'mime' => 'application/pdf',
+            ]);
+        }
+
+        return $email;
     }
-
-    return $email;
-}
-
 }

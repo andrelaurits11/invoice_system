@@ -17,6 +17,7 @@ interface InvoiceDetails {
 }
 
 interface Profile {
+  id: string;
   name: string;
   email: string;
   phone: string;
@@ -83,6 +84,7 @@ export default function NewInvoice() {
   const router = useRouter();
   const { logout } = useAuth();
   const [profile, setProfile] = useState<Profile>({
+    id: '',
     name: '',
     email: '',
     phone: '',
@@ -375,6 +377,19 @@ export default function NewInvoice() {
 
       // 6️⃣ Saada PDF e-postiga
       const pdfBase64 = await blobToBase64(pdfBlob);
+
+      // Kontrollime, kas user_id on saadaval profiili või localStorage kaudu
+      const storedUserId = localStorage.getItem('user_id');
+      const userId = profile.id || storedUserId;
+
+      console.log('🟢 Kasutaja ID:', userId);
+
+      if (!userId) {
+        console.error('❌ Kasutaja ID puudub! E-kirja saatmine peatatud.');
+        alert('Viga: Kasutaja ID puudub!');
+        return;
+      }
+
       const requestData = {
         email: companyDetails.email || 'MISSING_EMAIL',
         invoiceDetails: {
@@ -382,6 +397,7 @@ export default function NewInvoice() {
         },
         pdf: pdfBase64, // Base64 formaadis PDF
         fileName: fileName, // Failinimi lisatakse e-kirja andmetesse
+        user_id: userId, // ✅ Lisa user_id
       };
 
       console.log('📤 Saadan arve e-mailiga...');
@@ -393,11 +409,14 @@ export default function NewInvoice() {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
             'Content-Type': 'application/json',
           },
+          withCredentials: true,
         },
       );
-      console.log(`✅ Serveri vastus:`, sendResponse.data);
 
+      console.log('📢 Authorization Token:', localStorage.getItem('authToken'));
+      console.log(`✅ Serveri vastus:`, sendResponse.data);
       console.log(`✅ Arve saadetud e-mailiga failinimega: ${fileName}`);
+
       alert('Arve salvestatud ja saadetud edukalt!');
       router.push('/invoices');
     } catch (error) {
