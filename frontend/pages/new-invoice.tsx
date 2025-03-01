@@ -284,7 +284,7 @@ export default function NewInvoice() {
 
       // 1️⃣ Koosta andmed arve salvestamiseks
       const invoiceID = invoiceDetails.invoiceID || 'default';
-      const fileName = `invoice_${invoiceID}.pdf`; // Failinimi vastavalt invoiceID-le
+      const fileName = `invoice_${invoiceID}.pdf`;
 
       const payload = {
         invoice_id: invoiceID,
@@ -345,21 +345,9 @@ export default function NewInvoice() {
         return;
       }
 
-      console.log('✅ PDF genereeritud! Suurus:', pdfBlob.size, 'baiti');
+      console.log('✅ PDF genereeritud!');
 
-      // 📂 4️⃣ Ava PDF uues aknas
-      const pdfUrl = URL.createObjectURL(pdfBlob);
-      window.open(pdfUrl, '_blank');
-
-      // 📥 5️⃣ Laadi PDF alla vastava nimega
-      const link = document.createElement('a');
-      link.href = pdfUrl;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      console.log(`✅ PDF edukalt alla laaditud nimega: ${fileName}`);
-
+      // 📥 4️⃣ Konverteeri PDF Base64 formaati
       const blobToBase64 = (blob: Blob): Promise<string> => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -375,10 +363,9 @@ export default function NewInvoice() {
         });
       };
 
-      // 6️⃣ Saada PDF e-postiga
       const pdfBase64 = await blobToBase64(pdfBlob);
 
-      // Kontrollime, kas user_id on saadaval profiili või localStorage kaudu
+      // 5️⃣ Kontrollime kasutaja ID-d
       const storedUserId = localStorage.getItem('user_id');
       const userId = profile.id || storedUserId;
 
@@ -390,6 +377,7 @@ export default function NewInvoice() {
         return;
       }
 
+      // 6️⃣ Saada PDF e-mailiga
       const requestData = {
         email: companyDetails.email || 'MISSING_EMAIL',
         invoiceDetails: {
@@ -413,7 +401,6 @@ export default function NewInvoice() {
         },
       );
 
-      console.log('📢 Authorization Token:', localStorage.getItem('authToken'));
       console.log(`✅ Serveri vastus:`, sendResponse.data);
       console.log(`✅ Arve saadetud e-mailiga failinimega: ${fileName}`);
 
@@ -679,13 +666,6 @@ export default function NewInvoice() {
                 className='rounded bg-blue-500 px-4 py-2 text-white'
               >
                 Salvesta ja Saada
-              </button>
-              <button
-                onClick={() =>
-                  generatePDF(companyDetails, invoiceDetails, profile)
-                }
-              >
-                Laadi alla PDF
               </button>
             </div>
           </div>
