@@ -30,6 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [UserController::class, 'profile']);
     Route::put('/profile', [UserController::class, 'update']);     // Andmete muutmine
     Route::post('/profile/add', [UserController::class, 'add']);   // Uute andmete lisamine
+    Route::post('/profile/upload-logo', [UserController::class, 'uploadLogo']);
+    Route::get('/profile/logo', [UserController::class, 'getLogo']);
+
 
     Route::get('/invoices', [InvoiceController::class, 'index']);
     Route::post('/invoices', [InvoiceController::class, 'store']);

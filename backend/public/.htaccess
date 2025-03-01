@@ -4,6 +4,8 @@
     </IfModule>
 
     RewriteEngine On
+   Header always set Access-Control-Allow-Origin "http://localhost:3000"
+   Header always set Access-Control-Allow-Credentials "true"
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

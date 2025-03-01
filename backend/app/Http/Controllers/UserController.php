@@ -30,7 +30,14 @@ class UserController extends Controller
         'country' => 'nullable|string|max:255',
         'businessname' => 'nullable|string|max:255',
         'city' => 'nullable|string|max:255',
+        'logo_picture' => 'nullable|image|mimes:jpg,png,jpeg|max:2048' // Lisa pildi valideerimine
     ]);
+
+    if ($request->hasFile('logo_picture')) {
+        $file = $request->file('logo_picture');
+        $filePath = $file->store('logos', 'public'); // Salvesta `storage/app/public/logos`
+        $user->logo_picture = $filePath;
+    }
 
     // Uuendame kõik väljad, mis on edastatud
     $user->update($validated);
@@ -52,4 +59,41 @@ class UserController extends Controller
 
         return response()->json(['message' => 'Aadress lisatud', 'user' => $user]);
     }
+    public function uploadLogo(Request $request)
+{
+    $user = Auth::user();
+
+    $request->validate([
+        'logo_picture' => 'required|image|mimes:jpg,png,jpeg|max:2048',
+    ]);
+
+    if ($request->hasFile('logo_picture')) {
+        $file = $request->file('logo_picture');
+        $filePath = $file->store('logos', 'public'); // Salvesta storage/app/public/logos
+        $user->logo_picture = $filePath;
+        $user->save();
+    }
+
+    return response()->json([
+        'message' => 'Logo üleslaadimine õnnestus',
+        'logo_picture' => $user->logo_picture,
+    ]);
+}
+public function getLogo(Request $request)
+{
+    $user = auth()->user(); // Kasutaja tuvastamine
+    if (!$user || !$user->logo_picture) {
+        return response()->json(['error' => 'Logo puudub.'], 404);
+    }
+
+    $path = 'public/' . $user->logo_picture; // Veendu, et see vastaks failiteele!
+    if (!Storage::exists($path)) {
+        return response()->json(['error' => 'Faili ei leitud.'], 404);
+    }
+
+    $file = Storage::get($path);
+    $type = Storage::mimeType($path);
+
+    return response($file)->header('Content-Type', $type);
+}
 }

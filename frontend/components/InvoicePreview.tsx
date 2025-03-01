@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/alt-text */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Page,
   Text,
@@ -8,7 +8,6 @@ import {
   StyleSheet,
   PDFViewer,
   Image,
-  pdf,
 } from '@react-pdf/renderer';
 
 // Stiilide määratlus PDF jaoks
@@ -104,6 +103,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#555',
   },
+  logo: {
+    width: 'auto',
+    height: 'auto',
+    maxWidth: 80,
+    maxHeight: 80,
+    objectFit: 'contain',
+    resizeMode: 'contain',
+    borderRadius: 40,
+  },
 });
 
 // Tüüpide määratlus
@@ -118,6 +126,7 @@ interface Profile {
   zip: string;
   country: string;
   businessname: string;
+  logo_picture?: string | null;
 }
 interface CompanyDetails {
   name: string;
@@ -149,24 +158,35 @@ interface PDFViewerProps {
   profile: Profile;
 }
 
+// Pildi laadimine Base64 formaadis
+const fetchImageAsBase64 = async (imageUrl: string): Promise<string> => {
+  try {
+    const response = await fetch(imageUrl);
+    if (!response.ok) throw new Error('Pildi laadimine ebaõnnestus');
+
+    const blob = await response.blob();
+    const reader = new FileReader();
+    return new Promise((resolve) => {
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Pildi laadimine ebaõnnestus:', error);
+    return '/Test-IMG.png';
+  }
+};
+
 // PDF-i sisu
-const InvoiceDocument: React.FC<PDFViewerProps> = ({
-  companyDetails,
-  invoiceDetails,
-  profile,
-}) => (
+const InvoiceDocument: React.FC<{
+  companyDetails: CompanyDetails;
+  invoiceDetails: InvoiceDetails;
+  profile: Profile;
+  logoBase64: string;
+}> = ({ companyDetails, invoiceDetails, profile, logoBase64 }) => (
   <Document>
     <Page size='A4' style={styles.page}>
       <View style={styles.header}>
-        <Image
-          src='/Test-IMG.png'
-          style={{
-            width: 80,
-            height: 80,
-            objectFit: 'contain',
-            borderRadius: 40,
-          }}
-        />
+        {logoBase64 ? <Image src={logoBase64} style={styles.logo} /> : null}
         <View style={styles.companyInfo}>
           <Text style={{ fontWeight: 'bold' }}>{profile.businessname}</Text>
           <Text>{}</Text>
@@ -249,62 +269,32 @@ const InvoiceDocument: React.FC<PDFViewerProps> = ({
   </Document>
 );
 
-const generatePDF = async (
-  companyDetails: CompanyDetails,
-  invoiceDetails: InvoiceDetails,
-  profile: Profile,
-) => {
-  try {
-    const blob = await pdf(
-      <InvoiceDocument
-        companyDetails={companyDetails}
-        invoiceDetails={invoiceDetails}
-        profile={profile}
-      />,
-    ).toBlob(); // Genereerib PDF-i blob'i
-
-    // PDF-i kuvamine eelvaates või allalaadimine
-    const pdfUrl = URL.createObjectURL(blob);
-
-    // Kui kõik on õigesti seadistatud, saad selle lingi kaudu alla laadida või kuvada
-    const a = document.createElement('a');
-    a.href = pdfUrl;
-    a.download = 'invoice.pdf';
-    a.click(); // Käivitab allalaadimise
-
-    // Võid ka kuvada PDF-e eelvaate kohta
-    const pdfViewer = document.getElementById('pdf-preview');
-    if (pdfViewer) {
-      pdfViewer.setAttribute('src', pdfUrl);
-    }
-
-    console.log('✅ PDF edukalt genereeritud ja nähtav');
-  } catch (error) {
-    console.error('❌ Vean PDF-i genereerimisel:', error);
-  }
-};
-
-// InvoicePreviewPDF komponent
+// Peavaate komponent
 const InvoicePreviewPDF: React.FC<PDFViewerProps> = ({
   companyDetails,
   invoiceDetails,
   profile,
 }) => {
-  const handleGeneratePDF = () => {
-    generatePDF(companyDetails, invoiceDetails, profile);
-  };
+  const [logoBase64, setLogoBase64] = useState<string>('/Test-IMG.png');
+
+  useEffect(() => {
+    if (profile.logo_picture) {
+      const imageUrl = `/api/storage/${profile.logo_picture}`;
+
+      console.log('Pildi URL:', imageUrl);
+      fetchImageAsBase64(imageUrl).then(setLogoBase64);
+    }
+  }, [profile.logo_picture]);
 
   return (
-    <>
-      <PDFViewer style={{ width: '100%', height: '500px' }}>
-        <InvoiceDocument
-          companyDetails={companyDetails}
-          invoiceDetails={invoiceDetails}
-          profile={profile}
-        />
-      </PDFViewer>
-      <button onClick={handleGeneratePDF}>Downlodddad PDF</button>
-    </>
+    <PDFViewer style={{ width: '100%', height: '500px' }}>
+      <InvoiceDocument
+        companyDetails={companyDetails}
+        invoiceDetails={invoiceDetails}
+        profile={profile}
+        logoBase64={logoBase64}
+      />
+    </PDFViewer>
   );
 };
 export { InvoiceDocument };

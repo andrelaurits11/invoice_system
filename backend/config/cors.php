@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'], // Lubatud API teed
+    'paths' => ['api/*','storage/*', 'sanctum/csrf-cookie'], // Lubatud API teed
     'allowed_methods' => ['*'], // Kõik HTTP meetodid
-    'allowed_origins' => ['*'], // Frontendi aadress
+    'allowed_origins' => ['http://localhost:3000'], // Frontendi aadress
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'], // Kõik päised
     'exposed_headers' => [],

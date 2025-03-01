@@ -15,5 +15,6 @@ class VerifyCsrfToken extends Middleware
         // Välistame CSRF kontrolli järgmistelt marsruutidelt
         'sanctum/csrf-cookie',
         'api/*', // Kõik API marsruudid
+        'http://localhost:8000/storage/*',
     ];
 }

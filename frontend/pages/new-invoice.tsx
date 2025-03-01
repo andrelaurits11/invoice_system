@@ -217,6 +217,7 @@ export default function NewInvoice() {
           companyDetails={companyDetails}
           invoiceDetails={invoiceDetails}
           profile={profile}
+          logoBase64={''}
         />
       );
 
