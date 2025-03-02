@@ -121,18 +121,24 @@ const Dashboard = () => {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
         });
-
-        console.log('📝 API vastus:', response.data);
-        setInvoiceData(response.data);
+        setInvoiceData(
+          response.data
+            .sort(
+              (a: Invoice, b: Invoice) =>
+                new Date(b.created_at).getTime() -
+                new Date(a.created_at).getTime(),
+            )
+            .slice(0, 6),
+        );
       } catch (error) {
         console.error('❌ Viga arvete laadimisel:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchInvoices();
   }, []);
+
   useEffect(() => {
     if (activeTab === 'clients') {
       const fetchClients = async () => {
@@ -146,7 +152,15 @@ const Dashboard = () => {
               },
             },
           );
-          setClientData(response.data);
+          setClientData(
+            response.data
+              .sort(
+                (a: Client, b: Client) =>
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime(),
+              )
+              .slice(0, 6),
+          );
         } catch (error) {
           console.error('❌ Viga klientide laadimisel:', error);
         } finally {
