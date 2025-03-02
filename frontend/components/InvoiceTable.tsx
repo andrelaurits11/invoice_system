@@ -27,12 +27,28 @@ const InvoiceTable = () => {
   const router = useRouter();
   const { logout } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
+  const statusMap: { [key: string]: string } = {
+    makse_ootel: 'Makse ootel',
+    makstud: 'Maksutd',
+    ootel: 'Ootel',
+    osaliselt_makstud: 'Osaliselt makstud',
+  };
+
+  const invoicesPerPage = 15;
+
+  // Fetch invoices when currentPage changes
   const fetchInvoices = async () => {
     try {
       const response = await axios.get('http://localhost:8000/api/invoices', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        params: {
+          page: currentPage,
+          limit: invoicesPerPage,
         },
       });
 
@@ -50,6 +66,12 @@ const InvoiceTable = () => {
 
       if (Array.isArray(responseData)) {
         setInvoices(responseData);
+        // Get total count from response headers and calculate total pages
+        const totalInvoices = parseInt(
+          response.headers['x-total-count'] || '0',
+          10,
+        );
+        setTotalPages(Math.ceil(totalInvoices / invoicesPerPage));
       } else {
         console.error('API vastus ei ole massiiv:', responseData);
         setInvoices([]);
@@ -62,7 +84,14 @@ const InvoiceTable = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]); // Only fetch invoices when page changes
+
+  const handlePageChange = (page: number) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
 
   return (
     <div className='flex h-screen'>
@@ -125,7 +154,9 @@ const InvoiceTable = () => {
                   <td className='py-2'>{invoice.invoice_id}</td>
                   <td className='py-2'>{invoice.due_date}</td>
                   <td className='py-2'>{invoice.company_name || 'N/A'}</td>
-                  <td className='py-2'>{invoice.status}</td>
+                  <td className='py-2'>
+                    {statusMap[invoice.status] || invoice.status}
+                  </td>
                   <td className='py-2'>{invoice.total}</td>
                   <td className='py-2'>
                     <button
@@ -148,6 +179,27 @@ const InvoiceTable = () => {
             )}
           </tbody>
         </table>
+
+        {/* Navigeerimisnupud */}
+        <div className='mt-4 flex justify-center'>
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className='mx-2 rounded bg-gray-300 px-4 py-2'
+          >
+            Eelmine
+          </button>
+          <span className='mx-2'>
+            {currentPage} / {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className='mx-2 rounded bg-gray-300 px-4 py-2'
+          >
+            Järgmine
+          </button>
+        </div>
       </div>
     </div>
   );

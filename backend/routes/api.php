@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/upload-logo', [UserController::class, 'uploadLogo']);
     Route::get('/profile/logo', [UserController::class, 'getLogo']);
 
-
+    Route::get('/invoices', [InvoiceController::class, 'getInvoices']);
     Route::get('/invoices', [InvoiceController::class, 'index']);
     Route::post('/invoices', [InvoiceController::class, 'store']);
     Route::get('/invoices/{id}', [InvoiceController::class, 'show']);

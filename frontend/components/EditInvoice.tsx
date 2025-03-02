@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
+import Select from 'react-select';
 
 interface Profile {
   name: string;
@@ -61,6 +62,7 @@ const EditInvoice = () => {
   const router = useRouter();
   const { logout } = useAuth();
   const { id } = router.query;
+  const [status, setStatus] = useState<string>('makse_ootel');
   const [profile, setProfile] = useState<Profile>({
     name: '',
     email: '',
@@ -164,6 +166,18 @@ const EditInvoice = () => {
       items: prev.items.filter((_, i) => i !== index),
     }));
   };
+  const statusOptions = [
+    { label: 'Makse ootel', value: 'makse_ootel' },
+    { label: 'Maksutd', value: 'makstud' },
+    { label: 'Ootel', value: 'ootel' },
+    { label: 'Osaliselt makstud', value: 'osaliselt_makstud' },
+  ];
+  // Funktsioon, et käsitleda Select muutusi
+  const handleStatusChange = (selectedOption: { value: string } | null) => {
+    if (selectedOption) {
+      setStatus(selectedOption.value);
+    }
+  };
 
   const saveInvoice = async () => {
     const payload = {
@@ -178,6 +192,7 @@ const EditInvoice = () => {
       zip: companyDetails.zip,
       country: companyDetails.country,
       due_date: invoiceDetails.dueDate,
+      status: status,
       items: invoiceDetails.items.map((item) => ({
         description: item.description,
         rate: parseFloat(item.rate) || 0,
@@ -238,6 +253,18 @@ const EditInvoice = () => {
             <div className='grid flex-1 grid-cols-1 gap-6 lg:grid-cols-3'>
               <div className='rounded bg-white p-6 shadow lg:col-span-2'>
                 <h2 className='mb-4 text-lg font-semibold'>Edit Invoice</h2>
+                <div className='mb-4'>
+                  <Select
+                    options={statusOptions}
+                    value={
+                      statusOptions.find((option) => option.value === status) ||
+                      null
+                    }
+                    onChange={(selectedOption) =>
+                      handleStatusChange(selectedOption)
+                    }
+                  />
+                </div>
                 {invoiceDetails.items.map((item, index) => (
                   <div key={index} className='mb-3 grid grid-cols-12 gap-4'>
                     <input

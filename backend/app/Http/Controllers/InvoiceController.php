@@ -8,7 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use App\Models\User; // Lisa see rida, et kasutada User mudelit
+use Illuminate\Support\Facades\DB;
+use App\Models\User; // To use the User model
 
 class InvoiceController extends Controller
 {
@@ -58,6 +59,7 @@ class InvoiceController extends Controller
             'zip' => 'nullable|string',
             'country' => 'nullable|string',
             'due_date' => 'required|date',
+            'status' => 'required|string|in:makse_ootel,makstud,ootel,osaliselt_makstud',
             'items' => 'required|array',
             'items.*.description' => 'required|string',
             'items.*.rate' => 'required|numeric',
@@ -85,7 +87,7 @@ class InvoiceController extends Controller
                 'country' => $validated['country'] ?? '',
                 'due_date' => $validated['due_date'],
                 'total' => $total,
-                'status' => 'pending',
+                'status' => $validated['status'], // Storing the status
             ]);
 
             foreach ($validated['items'] as $item) {
@@ -121,6 +123,7 @@ class InvoiceController extends Controller
             'zip' => 'nullable|string',
             'country' => 'nullable|string',
             'due_date' => 'required|date',
+            'status' => 'required|string|in:makse_ootel,makstud,ootel,osaliselt_makstud', // Validate status during update (optional)
             'items' => 'required|array',
             'items.*.description' => 'required|string',
             'items.*.rate' => 'required|numeric',
@@ -128,12 +131,12 @@ class InvoiceController extends Controller
         ]);
 
         try {
-            // Arvuta total uuesti, lähtudes uuendatud items andmetest
+            // Recalculate total based on updated items data
             $total = collect($validated['items'])->reduce(function ($sum, $item) {
                 return $sum + ($item['rate'] * $item['quantity']);
             }, 0);
 
-            // Uuenda invoices tabeli põhiväljad ja total
+            // Update the main invoice fields and total
             $invoice->update([
                 'company_name' => $validated['company_name'],
                 'email' => $validated['email'],
@@ -145,10 +148,11 @@ class InvoiceController extends Controller
                 'zip' => $validated['zip'],
                 'country' => $validated['country'],
                 'due_date' => $validated['due_date'],
-                'total' => $total, // Siin uuendatakse total väärtus
+                'total' => $total, // Update total value
+                'status' => $validated['status'] ?? $invoice->status, // Update status if provided
             ]);
 
-            // Kustuta olemasolevad items ja lisa uued
+            // Delete old items and add new ones
             $invoice->items()->delete();
             foreach ($validated['items'] as $item) {
                 $invoice->items()->create($item);
@@ -165,59 +169,112 @@ class InvoiceController extends Controller
      * Send an invoice via email.
      */
     public function sendInvoice(Request $request)
-{
-    // Kontrollime, kas kõik vajalikud andmed on olemas
-    if (!$request->has('email') || !$request->has('invoiceDetails') || !$request->has('pdf') || !$request->has('user_id')) {
-        return response()->json(['error' => 'Puuduvad vajalikud andmed.'], 400); // 400 Bad Request
+    {
+        // Validate necessary data
+        if (!$request->has('email') || !$request->has('invoiceDetails') || !$request->has('pdf') || !$request->has('user_id')) {
+            return response()->json(['error' => 'Missing required data.'], 400); // 400 Bad Request
+        }
+
+        $email = $request->email; // Recipient's email address
+        $invoiceID = $request->invoiceDetails['invoiceID']; // Invoice ID
+        $pdf = $request->pdf; // PDF (base64 format)
+        $userID = $request->user_id; // Sender's user ID
+
+        // Find the user from the database
+        $user = User::find($userID);
+        if (!$user) {
+            return response()->json(['error' => 'Sender not found.'], 404); // 404 Not Found
+        }
+
+        // Set file name and storage location
+        $pdfFileName = 'invoice_' . $invoiceID . '.pdf';
+        $pdfPath = 'invoices/' . $pdfFileName;
+
+        // Store the PDF
+        Storage::put($pdfPath, base64_decode($pdf));
+
+        // Check if the file was stored successfully
+        if (!Storage::exists($pdfPath)) {
+            \Log::error("❌ PDF saving failed: $pdfPath");
+            return response()->json(['error' => 'PDF saving failed.'], 500);
+        }
+
+        // Prepare email data
+        $mailData = [
+            'invoiceID'   => $invoiceID,
+            'pdf_path'    => $pdfPath,
+            'senderEmail' => $user->email,        // Sender's email address from users table
+            'senderName'  => $user->businessname, // Sender's business name from users table
+        ];
+
+        try {
+            // Send the email
+            Mail::to($email)->send(new InvoiceMail($mailData, $user->email, $user->businessname));
+
+            // If the email was sent successfully, delete the temporary file
+            Storage::delete($pdfPath);
+
+            return response()->json(['message' => 'Email sent successfully!']);
+        } catch (\Exception $e) {
+            // If email sending failed, log the error and leave the file
+            \Log::error('Error sending email:', ['error' => $e->getMessage()]);
+
+            return response()->json(['error' => 'Email sending failed.'], 500);
+        }
     }
 
-    $email = $request->email; // Saaja e-posti aadress
-    $invoiceID = $request->invoiceDetails['invoiceID']; // Arve ID
-    $pdf = $request->pdf; // PDF (base64 formaadis)
-    $userID = $request->user_id; // Kasutaja ID (saatja määramiseks)
+    public function getInvoices(Request $request)
+    {
+        // Kontrollige, kas kasutaja on autentitud
+        $userId = auth()->id();
+        if (!$userId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
 
-    // Otsime kasutaja andmebaasist
-    $user = User::find($userID);
-    if (!$user) {
-        return response()->json(['error' => 'Saatja ei leitud.'], 404); // 404 Not Found
+        // Logige, et autentimine õnnestus ja kasutaja ID on saadud
+        \Log::info('Kasutaja ID:', ['user_id' => $userId]);
+
+        // Vaikimisi väärtused
+        $limit = $request->query('limit', 15); // Vaikimisi 15 arvet
+        $page = $request->query('page', 1); // Vaikimisi 1. leht
+
+        // Kontrollige, et limit oleks positiivne number
+        if ($limit <= 0) {
+            return response()->json(['error' => 'Limit must be a positive number.'], 400);
+        }
+
+        // Logige päringu parameetrid
+        \Log::info('Päringu parameetrid:', ['limit' => $limit, 'page' => $page]);
+
+        // Kasutame Eloquenti päringut koos leheküljendusega
+        $invoices = Invoice::where('user_id', $userId) // Filtreerime õigesti kasutaja järgi
+                            ->paginate($limit, ['*'], 'page', $page); // Pagineerime, kasutades $limit ja $page parameetreid
+
+        // Logige päringu SQL ja parameetrid
+        \Log::info('SQL päring:', ['query' => $invoices->toSql(), 'bindings' => $invoices->getBindings()]);
+
+        // Kontrollige, kas päring tagastab õiged arved
+        \Log::info('Leitud arved:', ['invoices_count' => $invoices->count(), 'invoices' => $invoices->items()]);
+
+        // Kontrollige pagineerimist
+        if ($invoices->count() > 0) {
+            \Log::info('Pagineeritud arved:', ['page_count' => $invoices->count(), 'current_page' => $invoices->currentPage()]);
+        } else {
+            \Log::warning('Ei leitud arveid kasutajale', ['user_id' => $userId]);
+        }
+
+        // Tagastage andmed vastusena
+        return response()->json([
+            'data' => $invoices->items(), // Tagastame ainult praeguse lehe arved
+            'total_count' => $invoices->total(), // Kõikide arvete arv (kõik lehed kokku)
+            'current_page' => $invoices->currentPage(), // Praegune leht
+            'last_page' => $invoices->lastPage(), // Viimane leht
+            'limit' => $limit, // Näitame, mitu arvet on piiratud igal lehel
+        ]);
     }
 
-    // Määrame failinime ja salvestuskoha
-    $pdfFileName = 'invoice_' . $invoiceID . '.pdf';
-    $pdfPath = 'invoices/' . $pdfFileName;
 
-    // Salvestame PDF-i
-    Storage::put($pdfPath, base64_decode($pdf));
 
-    // ✅ Kontrollime, kas fail salvestati edukalt
-    if (!Storage::exists($pdfPath)) {
-        \Log::error("❌ PDF salvestamine ebaõnnestus: $pdfPath");
-        return response()->json(['error' => 'PDF salvestamine ebaõnnestus.'], 500);
-    }
-
-    // Valmistame e-kirja andmed
-    $mailData = [
-        'invoiceID'   => $invoiceID,
-        'pdf_path'    => $pdfPath,
-        'senderEmail' => $user->email,        // Saatja e-posti aadress users tabelist
-        'senderName'  => $user->businessname, // Saatja ärinimi users tabelist
-    ];
-
-    try {
-        // Saadame e-kirja
-        Mail::to($email)->send(new InvoiceMail($mailData, $user->email, $user->businessname));
-
-        // ✅ Kui e-kiri saadeti edukalt, kustutame ajutise faili
-        Storage::delete($pdfPath);
-
-        return response()->json(['message' => 'E-mail saadetud edukalt!']);
-    } catch (\Exception $e) {
-        // ❌ Kui e-kirja saatmine ebaõnnestus, logime vea ja jätame faili alles
-        \Log::error('E-maili saatmise viga:', ['error' => $e->getMessage()]);
-
-        return response()->json(['error' => 'E-maili saatmine ebaõnnestus.'], 500);
-    }
-}
 
 
 }

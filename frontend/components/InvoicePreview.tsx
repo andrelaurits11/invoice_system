@@ -156,6 +156,7 @@ interface PDFViewerProps {
   companyDetails: CompanyDetails;
   invoiceDetails: InvoiceDetails;
   profile: Profile;
+  logoBase64: logoBase64;
 }
 
 // Pildi laadimine Base64 formaadis

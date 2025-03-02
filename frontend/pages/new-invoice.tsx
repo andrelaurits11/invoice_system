@@ -5,9 +5,10 @@ import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
 import axios from 'axios';
-import Select from 'react-select';
 import { useEffect } from 'react';
 import { pdf } from '@react-pdf/renderer';
+import Select from 'react-select';
+import { SingleValue } from 'react-select';
 
 interface InvoiceDetails {
   dueDate: string;
@@ -28,6 +29,7 @@ interface Profile {
   zip: string;
   country: string;
   businessname: string;
+  logo_picture?: string | null;
 }
 interface CompanyDetails {
   name: string;
@@ -81,6 +83,7 @@ const fetchProfileData = async () => {
 };
 
 export default function NewInvoice() {
+  const [status, setStatus] = useState<string>('makse_ootel');
   const router = useRouter();
   const { logout } = useAuth();
   const [profile, setProfile] = useState<Profile>({
@@ -107,6 +110,33 @@ export default function NewInvoice() {
     zip: '',
     country: '',
   });
+  // Pildi laadimine Base64 formaadis
+  const fetchImageAsBase64 = async (imageUrl: string): Promise<string> => {
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Pildi laadimine ebaõnnestus');
+
+      const blob = await response.blob();
+      const reader = new FileReader();
+      return new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Pildi laadimine ebaõnnestus:', error);
+      return '/Test-IMG.png';
+    }
+  };
+  const [logoBase64, setLogoBase64] = useState<string>('/Test-IMG.png');
+
+  useEffect(() => {
+    if (profile.logo_picture) {
+      const imageUrl = `/api/storage/${profile.logo_picture}`;
+
+      console.log('Pildi URL:', imageUrl);
+      fetchImageAsBase64(imageUrl).then(setLogoBase64);
+    }
+  }, [profile.logo_picture]);
 
   const [invoiceDetails, setInvoiceDetails] = useState<InvoiceDetails>({
     dueDate: '',
@@ -204,6 +234,7 @@ export default function NewInvoice() {
     companyDetails: CompanyDetails,
     invoiceDetails: InvoiceDetails,
     profile: Profile,
+    logoBase64: logoBase64,
   ): Promise<Blob | null> => {
     try {
       console.log('🛠 Kontrollime `InvoicePreview` andmeid:', {
@@ -217,7 +248,7 @@ export default function NewInvoice() {
           companyDetails={companyDetails}
           invoiceDetails={invoiceDetails}
           profile={profile}
-          logoBase64={''}
+          logoBase64={logoBase64}
         />
       );
 
@@ -251,6 +282,7 @@ export default function NewInvoice() {
       zip: companyDetails.zip,
       country: companyDetails.country,
       due_date: invoiceDetails.dueDate,
+      status: status,
       items: invoiceDetails.items.map((item) => ({
         description: item.description,
         rate: parseFloat(item.rate) || 0,
@@ -299,6 +331,7 @@ export default function NewInvoice() {
         zip: String(companyDetails.zip || ''),
         country: companyDetails.country || '',
         due_date: invoiceDetails.dueDate || 'MISSING_DATE',
+        status: status,
         items: invoiceDetails.items.map((item) => ({
           description: item.description || 'MISSING_DESCRIPTION',
           rate: isNaN(parseFloat(item.rate)) ? 0 : parseFloat(item.rate),
@@ -338,6 +371,7 @@ export default function NewInvoice() {
         companyDetails,
         invoiceDetails,
         profile,
+        logoBase64,
       );
 
       if (!pdfBlob) {
@@ -419,16 +453,18 @@ export default function NewInvoice() {
     }
   };
 
-  const options = [
-    { value: 'maksutud', label: 'Maksutud' },
-    { value: 'ootel', label: 'Ootel' },
+  const statusOptions = [
+    { label: 'Makse ootel', value: 'makse_ootel' },
+    { label: 'Maksutd', value: 'makstud' },
+    { label: 'Ootel', value: 'ootel' },
+    { label: 'Osaliselt makstud', value: 'osaliselt_makstud' },
   ];
 
-  const handleChange = (
-    selectedOption: { value: string; label: string } | null,
+  const handleStatusChange = (
+    newValue: SingleValue<{ label: string | undefined; value: string }> | null,
   ) => {
-    if (selectedOption) {
-      console.log('Selected:', selectedOption.value);
+    if (newValue !== null) {
+      setStatus(newValue.value); // Kasutame value-d, kuna status on ainult string
     }
   };
 
@@ -574,10 +610,16 @@ export default function NewInvoice() {
 
                 <form>
                   <Select
-                    options={options}
-                    onChange={handleChange}
-                    placeholder='Vali staatus'
+                    options={statusOptions}
+                    value={{
+                      label: statusOptions.find(
+                        (option) => option.value === status,
+                      )?.label,
+                      value: status,
+                    }}
+                    onChange={handleStatusChange}
                   />
+
                   <input
                     className='mb-3 w-full rounded border p-2'
                     placeholder='Maksetähtaeg'
@@ -651,6 +693,7 @@ export default function NewInvoice() {
                     companyDetails={companyDetails}
                     invoiceDetails={invoiceDetails}
                     profile={profile}
+                    logoBase64={logoBase64}
                   />
                 </div>
               </div>
