@@ -113,80 +113,149 @@ const ProfilePage = () => {
     setEditing(field);
   };
 
+  const handleSave = async () => {
+    try {
+      const updateData = new FormData();
+
+      // Lisa ainult muudetav väli
+      if (editing && formData[editing as keyof UserProfile] !== undefined) {
+        updateData.append(
+          editing,
+          formData[editing as keyof UserProfile] as string,
+        );
+      }
+
+      const response = await axios.post(
+        'http://localhost:8000/api/profile',
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      );
+
+      setProfile(response.data.user); // Uuenda profiili andmeid
+      setEditing(null); // Peida sisestusväli
+      alert('Profiil edukalt uuendatud!');
+    } catch (error) {
+      console.error('Update error:', error);
+      alert('Profiili uuendamine ebaõnnestus.');
+    }
+  };
+
   return (
-    <div className='flex h-screen'>
-      <div className='flex-1 p-8'>
-        <h1 className='mb-4 text-2xl font-bold'>Minu profiil</h1>
+    <div className='flex min-h-screen flex-col items-center justify-center bg-gray-100 p-6'>
+      <div className='w-full max-w-4xl rounded-lg bg-white p-8 shadow-lg'>
+        <h1 className='mb-6 text-center text-3xl font-bold'>Minu profiil</h1>
+
         {profile ? (
-          <div className='rounded border p-6 shadow'>
-            {[
-              'name',
-              'email',
-              'phone',
-              'address',
-              'country',
-              'state',
-              'zip',
-              'businessname',
-              'city',
-            ].map((field) => (
-              <div
-                key={field}
-                className='mb-4 flex items-center justify-between'
-              >
-                {!editing || editing !== field ? (
-                  <p className='font-semibold'>
+          <div className='grid gap-6 md:grid-cols-2'>
+            {/* Vasak pool: Profiili info */}
+            <div className='rounded-lg bg-gray-50 p-6 shadow-sm'>
+              {[
+                'name',
+                'email',
+                'phone',
+                'address',
+                'country',
+                'state',
+                'zip',
+                'businessname',
+                'city',
+              ].map((field) => (
+                <div key={field} className='mb-4'>
+                  <label className='block text-sm font-medium text-gray-600'>
                     {field === 'businessname'
                       ? 'Ärinimi'
                       : field.charAt(0).toUpperCase() + field.slice(1)}
-                    : {profile[field as keyof UserProfile]}
-                  </p>
-                ) : (
-                  <input
-                    type='text'
-                    name={field}
-                    value={formData[field as keyof UserProfile] as string}
-                    onChange={handleChange}
-                    className='w-full rounded border px-4 py-2'
-                  />
-                )}
-                <button
-                  onClick={() => handleEdit(field)}
-                  className='text-blue-500'
-                >
-                  <FontAwesomeIcon icon={faEdit} className='h-5 w-5' />
-                </button>
-              </div>
-            ))}
+                  </label>
 
-            {/* Profiilipilt ja üleslaadimise funktsionaalsus */}
-            <div className='mt-6'>
-              {profile.logo_picture && (
-                <Image
-                  src={`http://localhost:8000/storage/${profile.logo_picture}`}
-                  alt='Logo'
-                  width={128}
-                  height={128}
-                  className='rounded-full object-cover'
-                />
-              )}
+                  {!editing || editing !== field ? (
+                    <p className='mt-1 text-gray-800'>
+                      {profile[field as keyof UserProfile]}
+                    </p>
+                  ) : (
+                    <input
+                      type='text'
+                      name={field}
+                      value={formData[field as keyof UserProfile] as string}
+                      onChange={handleChange}
+                      className='mt-1 w-full rounded border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400'
+                    />
+                  )}
+
+                  <button
+                    onClick={() => handleEdit(field)}
+                    className='mt-2 text-blue-500'
+                  >
+                    <FontAwesomeIcon icon={faEdit} className='h-4 w-4' />
+                  </button>
+
+                  {editing === field && (
+                    <button
+                      onClick={handleSave}
+                      className='mt-2 w-full rounded-lg bg-blue-500 px-4 py-2 text-white shadow transition hover:bg-blue-600'
+                    >
+                      Salvesta muudatused
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Parem pool: Profiilipilt ja üleslaadimine */}
+            <div className='relative flex flex-col items-center rounded-lg bg-gray-50 p-6 shadow-sm'>
+              <div
+                className='group relative cursor-pointer'
+                onClick={() => document.getElementById('fileInput')?.click()}
+              >
+                {profile.logo_picture ? (
+                  <Image
+                    src={`http://localhost:8000/storage/${profile.logo_picture}`}
+                    alt='Profile Picture'
+                    width={250}
+                    height={250}
+                    className='rounded-full border border-gray-300 object-cover transition-opacity duration-300 group-hover:opacity-50'
+                  />
+                ) : (
+                  <div className='flex h-32 w-32 items-center justify-center rounded-full border border-gray-300 bg-gray-200 text-gray-600'>
+                    Profiilipilt puudub
+                  </div>
+                )}
+
+                {/* Hoveril nähtav tekst */}
+                <div className='absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100'>
+                  <span className='font-semibold text-white'>Uuenda pilti</span>
+                </div>
+              </div>
+
+              {/* Peidetud failivalija */}
               <input
                 type='file'
+                id='fileInput'
                 onChange={handleFileChange}
-                className='mt-4 w-full'
+                className='hidden'
               />
-              <button
-                onClick={handleFileUpload}
-                disabled={uploading}
-                className='mt-2 flex items-center justify-center rounded bg-blue-500 px-4 py-2 text-white'
-              >
-                <FontAwesomeIcon icon={faUpload} className='mr-2' />
-                {uploading ? 'Laadin üles...' : 'Laadi uus pilt'}
-              </button>
+
+              {/* Laadi üles nupp */}
+              {selectedFile && (
+                <button
+                  onClick={handleFileUpload}
+                  disabled={uploading}
+                  className='mt-4 flex w-full items-center justify-center rounded-lg bg-blue-500 px-4 py-2 text-white shadow transition hover:bg-blue-600'
+                >
+                  <FontAwesomeIcon icon={faUpload} className='mr-2' />
+                  {uploading ? 'Laadin üles...' : 'Laadi uus pilt'}
+                </button>
+              )}
             </div>
           </div>
         ) : (
-          <p>Laadin profiili andmeid...</p>
+          <p className='text-center text-gray-600'>
+            Laadin profiili andmeid...
+          </p>
         )}
       </div>
     </div>

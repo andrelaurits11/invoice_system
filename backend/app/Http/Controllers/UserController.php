@@ -18,7 +18,7 @@ class UserController extends Controller
 {
     $user = $request->user();
 
-    // Validatsioon kõigi väljade kohta
+    // Validatsioon (pilt on valikuline, ainult kui see on lisatud)
     $validated = $request->validate([
         'name' => 'string|max:255',
         'email' => 'email|unique:users,email,' . $user->id,
@@ -30,20 +30,17 @@ class UserController extends Controller
         'country' => 'nullable|string|max:255',
         'businessname' => 'nullable|string|max:255',
         'city' => 'nullable|string|max:255',
-        'logo_picture' => 'nullable|image|mimes:jpg,png,jpeg|max:2048' // Lisa pildi valideerimine
+
     ]);
 
-    if ($request->hasFile('logo_picture')) {
-        $file = $request->file('logo_picture');
-        $filePath = $file->store('logos', 'public'); // Salvesta `storage/app/public/logos`
-        $user->logo_picture = $filePath;
-    }
 
-    // Uuendame kõik väljad, mis on edastatud
+
+    // Uuenda ainult neid välju, mis on edastatud
     $user->update($validated);
 
     return response()->json(['message' => 'Andmed uuendatud', 'user' => $user]);
 }
+
 
 
     // Lisame näiteks aadressi (või muu lisainfo)

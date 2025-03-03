@@ -468,7 +468,7 @@ const NewInvoiceForm = () => {
 
   return (
     <Layout>
-      <div className='flex h-screen flex-col'>
+      <div className='flex min-h-screen flex-col'>
         <div className='flex flex-1'>
           <div className='flex flex-1 flex-col bg-gray-50 p-6'>
             <div className='mb-6 flex items-center justify-between'>

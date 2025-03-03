@@ -218,7 +218,7 @@ const EditInvoice = () => {
 
   return (
     <Layout>
-      <div className='flex h-screen flex-col'>
+      <div className='flex min-h-screen flex-col'>
         <div className='flex flex-1'>
           <div className='flex w-1/5 flex-col bg-gray-100 p-6'>
             <h2 className='mb-6 text-xl font-bold'>Arved</h2>
