@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import {
@@ -103,8 +102,7 @@ const chartOptions = {
 };
 
 const Dashboard = () => {
-  const router = useRouter();
-  const { logout } = useAuth();
+  useAuth();
   const [invoiceData, setInvoiceData] = useState<Invoice[]>([]);
   const [clientData, setClientData] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -204,32 +202,6 @@ const Dashboard = () => {
 
   return (
     <div className='flex h-screen'>
-      <div className='w-1/5 bg-gray-900 p-6 text-white'>
-        <h2 className='mb-6 text-xl font-bold'>Töölaud</h2>
-        <nav className='flex flex-col space-y-4'>
-          <button onClick={() => router.push('/')} className='text-blue-300'>
-            Töölaud
-          </button>
-          <button
-            onClick={() => router.push('/invoices')}
-            className='text-gray-300'
-          >
-            Arved
-          </button>
-          <button
-            onClick={() => router.push('/clients')}
-            className='text-gray-300'
-          >
-            Kliendid
-          </button>
-          <button
-            onClick={logout}
-            className='mt-4 rounded bg-red-500 px-4 py-2 text-white'
-          >
-            Logout
-          </button>
-        </nav>
-      </div>
       <div className='flex-1 bg-gray-50 p-6'>
         <div className='mb-6 flex items-center justify-between'>
           <input

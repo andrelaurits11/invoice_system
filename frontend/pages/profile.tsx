@@ -1,11 +1,11 @@
-import Layout from '@/components/Layout';
+import LayoutMain from '@/components/LayoutMain';
 import EditProfile from '../components/EditProfile';
 
 const ProfilePage = () => {
   return (
-    <Layout>
+    <LayoutMain>
       <EditProfile />
-    </Layout>
+    </LayoutMain>
   );
 };
 

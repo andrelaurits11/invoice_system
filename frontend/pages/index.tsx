@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
 import Dashboard from '../components/Dashboard';
-import Layout from '../components/Layout';
+import LayoutMain from '../components/LayoutMain';
 
 const Homepage = () => {
   const { isAuthenticated } = useAuth();
@@ -20,9 +20,9 @@ const Homepage = () => {
   }
 
   return (
-    <Layout>
+    <LayoutMain>
       <Dashboard />
-    </Layout>
+    </LayoutMain>
   );
 };
 

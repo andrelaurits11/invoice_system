@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import Layout from '../components/Layout';
+import LayoutMain from '../components/LayoutMain';
 import InvoiceTable from '../components/InvoiceTable';
 
 const InvoicesPage = () => {
@@ -10,9 +10,9 @@ const InvoicesPage = () => {
   }
 
   return (
-    <Layout>
+    <LayoutMain>
       <InvoiceTable />
-    </Layout>
+    </LayoutMain>
   );
 };
 

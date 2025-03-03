@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import Layout from '../components/Layout';
+import LayoutMain from '../components/LayoutMain';
 import ClientTable from '../components/ClientTable';
 
 const ClientsPage = () => {
@@ -10,9 +10,9 @@ const ClientsPage = () => {
   }
 
   return (
-    <Layout>
+    <LayoutMain>
       <ClientTable />
-    </Layout>
+    </LayoutMain>
   );
 };
 

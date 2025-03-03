@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +17,7 @@ interface Invoice {
   invoice_id: number;
   company_name: string;
   due_date: string;
+  created_at: string;
   status: string;
   total: number;
   pdf_path: string;
@@ -25,110 +26,109 @@ interface Invoice {
 
 const InvoiceTable = () => {
   const router = useRouter();
-  const { logout } = useAuth();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  useAuth();
+  const [allInvoices, setAllInvoices] = useState<Invoice[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState('-created_at');
+
+  const invoicesPerPage = 15;
 
   const statusMap: { [key: string]: string } = {
     makse_ootel: 'Makse ootel',
-    makstud: 'Maksutd',
+    makstud: 'Makstud',
     ootel: 'Ootel',
     osaliselt_makstud: 'Osaliselt makstud',
   };
 
-  const invoicesPerPage = 15;
-
-  // Fetch invoices when currentPage changes
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     try {
       const response = await axios.get('http://localhost:8000/api/invoices', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`,
         },
-        params: {
-          page: currentPage,
-          limit: invoicesPerPage,
-        },
+        params: { sort: '-created_at' }, // Sortimine serveri poolt
       });
 
-      let responseData = response.data;
-
-      if (typeof responseData === 'string') {
-        const cleanData = responseData.replace(/<[^>]*>/g, '').trim();
-        try {
-          responseData = JSON.parse(cleanData);
-        } catch (error) {
-          console.error('Puhastatud JSON pole kehtiv:', cleanData);
-          throw error;
-        }
-      }
-
-      if (Array.isArray(responseData)) {
-        setInvoices(responseData);
-        // Get total count from response headers and calculate total pages
-        const totalInvoices = parseInt(
-          response.headers['x-total-count'] || '0',
-          10,
-        );
-        setTotalPages(Math.ceil(totalInvoices / invoicesPerPage));
+      if (Array.isArray(response.data)) {
+        setAllInvoices(response.data);
       } else {
-        console.error('API vastus ei ole massiiv:', responseData);
-        setInvoices([]);
+        console.error('API vastus ei ole massiiv:', response.data);
+        setAllInvoices([]);
       }
     } catch (error) {
-      console.error('Failed to fetch invoices:', error);
-      alert('Failed to fetch invoices.');
+      console.error('Arvete laadimine ebaõnnestus:', error);
+      alert('Arvete laadimine ebaõnnestus.');
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchInvoices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage]); // Only fetch invoices when page changes
+  }, [fetchInvoices]);
 
-  const handlePageChange = (page: number) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+  const filteredInvoices = allInvoices
+    .filter((invoice) =>
+      statusFilter ? invoice.status === statusFilter : true,
+    )
+    .filter((invoice) =>
+      searchQuery
+        ? invoice.invoice_id.toString().includes(searchQuery) ||
+          invoice.company_name
+            ?.toLowerCase()
+            .includes(searchQuery.toLowerCase())
+        : true,
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return sortOrder === '-created_at' ? dateB - dateA : dateA - dateB;
+    });
+
+  const totalPages = Math.ceil(filteredInvoices.length / invoicesPerPage);
+  const displayedInvoices = filteredInvoices.slice(
+    (currentPage - 1) * invoicesPerPage,
+    currentPage * invoicesPerPage,
+  );
 
   return (
-    <div className='flex h-screen'>
-      <div className='w-1/5 bg-gray-100 p-6'>
-        <h2 className='mb-6 text-xl font-bold'>Arved</h2>
-        <nav className='flex flex-col space-y-4'>
-          <button onClick={() => router.push('/')} className='text-gray-600'>
-            Töölaud
-          </button>
-          <button
-            onClick={() => router.push('/invoices')}
-            className='font-semibold text-blue-500'
-          >
-            Arved
-          </button>
-          <button
-            onClick={() => router.push('/clients')}
-            className='text-gray-600'
-          >
-            Kliendid
-          </button>
-          <button
-            onClick={logout}
-            className='mt-4 rounded bg-red-500 px-4 py-2 text-white'
-          >
-            Logout
-          </button>
-        </nav>
-      </div>
-
+    <div className='flex'>
+      {/* Main Content */}
       <div className='flex-1 bg-gray-50 p-6'>
         <div className='mb-6 flex items-center justify-between'>
-          <input
-            type='text'
-            placeholder='Otsi...'
-            className='w-1/3 rounded border border-gray-300 p-2'
-          />
+          {/* Filters */}
+          <div className='flex space-x-4'>
+            <select
+              className='rounded border p-2'
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value=''>Kõik staatused</option>
+              {Object.keys(statusMap).map((status) => (
+                <option key={status} value={status}>
+                  {statusMap[status]}
+                </option>
+              ))}
+            </select>
+
+            <input
+              type='text'
+              placeholder='Otsi arvet või klienti...'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className='rounded border p-2'
+            />
+
+            <select
+              className='rounded border p-2'
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+            >
+              <option value='-created_at'>Uuemad esimesena</option>
+              <option value='created_at'>Vanemad esimesena</option>
+            </select>
+          </div>
+
           <Link href='/new-invoice'>
             <button className='rounded bg-blue-500 px-4 py-2 text-white'>
               Uus Arve
@@ -136,11 +136,12 @@ const InvoiceTable = () => {
           </Link>
         </div>
 
+        {/* Invoice Table */}
         <table className='w-full border-collapse rounded bg-white shadow'>
           <thead>
             <tr className='border-b text-left'>
               <th className='py-2'>Arve ID</th>
-              <th className='py-2'>Kuupäev</th>
+              <th className='py-2'>Loodud</th>
               <th className='py-2'>Klient</th>
               <th className='py-2'>Staatus</th>
               <th className='py-2'>Kokku</th>
@@ -148,16 +149,18 @@ const InvoiceTable = () => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(invoices) && invoices.length > 0 ? (
-              invoices.map((invoice) => (
+            {displayedInvoices.length > 0 ? (
+              displayedInvoices.map((invoice) => (
                 <tr className='border-b' key={invoice.id}>
                   <td className='py-2'>{invoice.invoice_id}</td>
-                  <td className='py-2'>{invoice.due_date}</td>
+                  <td className='py-2'>
+                    {new Date(invoice.created_at).toLocaleDateString()}
+                  </td>
                   <td className='py-2'>{invoice.company_name || 'N/A'}</td>
                   <td className='py-2'>
                     {statusMap[invoice.status] || invoice.status}
                   </td>
-                  <td className='py-2'>{invoice.total}</td>
+                  <td className='py-2'>{invoice.total} €</td>
                   <td className='py-2'>
                     <button
                       onClick={() =>
@@ -165,7 +168,7 @@ const InvoiceTable = () => {
                       }
                       className='rounded bg-blue-500 px-4 py-2 text-white'
                     >
-                      Edit
+                      Muuda
                     </button>
                   </td>
                 </tr>
@@ -173,33 +176,37 @@ const InvoiceTable = () => {
             ) : (
               <tr>
                 <td colSpan={6} className='py-4 text-center text-gray-500'>
-                  No invoices found
+                  Arveid ei leitud
                 </td>
               </tr>
             )}
           </tbody>
         </table>
 
-        {/* Navigeerimisnupud */}
-        <div className='mt-4 flex justify-center'>
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className='mx-2 rounded bg-gray-300 px-4 py-2'
-          >
-            Eelmine
-          </button>
-          <span className='mx-2'>
-            {currentPage} / {totalPages}
-          </span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className='mx-2 rounded bg-gray-300 px-4 py-2'
-          >
-            Järgmine
-          </button>
-        </div>
+        {/* Pagination */}
+        {filteredInvoices.length > invoicesPerPage && (
+          <div className='mt-4 flex justify-center'>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className='mx-2 rounded bg-gray-300 px-4 py-2 disabled:opacity-50'
+            >
+              Eelmine
+            </button>
+            <span className='mx-2'>
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
+              disabled={currentPage === totalPages}
+              className='mx-2 rounded bg-gray-300 px-4 py-2 disabled:opacity-50'
+            >
+              Järgmine
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

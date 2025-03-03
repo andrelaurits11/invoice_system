@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -22,8 +21,7 @@ interface UserProfile {
 }
 
 const ProfilePage = () => {
-  const router = useRouter();
-  const { logout } = useAuth();
+  useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [formData, setFormData] = useState<UserProfile>({
@@ -117,33 +115,6 @@ const ProfilePage = () => {
 
   return (
     <div className='flex h-screen'>
-      <div className='w-1/5 bg-gray-100 p-6'>
-        <h2 className='mb-6 text-xl font-bold'>Kliendid</h2>
-        <nav className='flex flex-col space-y-4'>
-          <button onClick={() => router.push('/')} className='text-gray-600'>
-            Töölaud
-          </button>
-          <button
-            onClick={() => router.push('/invoices')}
-            className='text-gray-600'
-          >
-            Arved
-          </button>
-          <button
-            onClick={() => router.push('/clients')}
-            className='font-semibold text-blue-500'
-          >
-            Kliendid
-          </button>
-          <button
-            onClick={logout}
-            className='mt-4 rounded bg-red-500 px-4 py-2 text-white'
-          >
-            Logout
-          </button>
-        </nav>
-      </div>
-
       <div className='flex-1 p-8'>
         <h1 className='mb-4 text-2xl font-bold'>Minu profiil</h1>
         {profile ? (
