@@ -146,67 +146,14 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className='flex min-h-screen flex-col items-center justify-center bg-gray-100 p-6'>
+    <div className='flex min-h-screen flex-col items-center justify-center p-6'>
       <div className='w-full max-w-4xl rounded-lg bg-white p-8 shadow-lg'>
         <h1 className='mb-6 text-center text-3xl font-bold'>Minu profiil</h1>
 
         {profile ? (
-          <div className='grid gap-6 md:grid-cols-2'>
-            {/* Vasak pool: Profiili info */}
-            <div className='rounded-lg bg-gray-50 p-6 shadow-sm'>
-              {[
-                'name',
-                'email',
-                'phone',
-                'address',
-                'country',
-                'state',
-                'zip',
-                'businessname',
-                'city',
-              ].map((field) => (
-                <div key={field} className='mb-4'>
-                  <label className='block text-sm font-medium text-gray-600'>
-                    {field === 'businessname'
-                      ? 'Ärinimi'
-                      : field.charAt(0).toUpperCase() + field.slice(1)}
-                  </label>
-
-                  {!editing || editing !== field ? (
-                    <p className='mt-1 text-gray-800'>
-                      {profile[field as keyof UserProfile]}
-                    </p>
-                  ) : (
-                    <input
-                      type='text'
-                      name={field}
-                      value={formData[field as keyof UserProfile] as string}
-                      onChange={handleChange}
-                      className='mt-1 w-full rounded border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400'
-                    />
-                  )}
-
-                  <button
-                    onClick={() => handleEdit(field)}
-                    className='mt-2 text-blue-500'
-                  >
-                    <FontAwesomeIcon icon={faEdit} className='h-4 w-4' />
-                  </button>
-
-                  {editing === field && (
-                    <button
-                      onClick={handleSave}
-                      className='mt-2 w-full rounded-lg bg-blue-500 px-4 py-2 text-white shadow transition hover:bg-blue-600'
-                    >
-                      Salvesta muudatused
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Parem pool: Profiilipilt ja üleslaadimine */}
-            <div className='relative flex flex-col items-center rounded-lg bg-gray-50 p-6 shadow-sm'>
+          <div className='grid gap-6 md:grid-cols-3'>
+            {/* Vasak pool: Profiilipilt ja põhiinfo */}
+            <div className='flex flex-col items-center rounded-lg bg-gray-50 p-6 shadow-sm'>
               <div
                 className='group relative cursor-pointer'
                 onClick={() => document.getElementById('fileInput')?.click()}
@@ -250,6 +197,69 @@ const ProfilePage = () => {
                   {uploading ? 'Laadin üles...' : 'Laadi uus pilt'}
                 </button>
               )}
+
+              {/* Ärinimi, email, telefon */}
+              <div className='mt-4 text-center'>
+                <h2 className='text-xl font-semibold'>
+                  {profile.businessname}
+                </h2>
+                <p className='text-gray-600'>{profile.email}</p>
+                <p className='text-gray-600'>{profile.phone}</p>
+              </div>
+            </div>
+            {/* Parem pool: Profiili andmed kahes veerus */}
+            <div className='col-span-2 rounded-lg bg-gray-50 p-6 shadow-sm'>
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                {[
+                  'businessname',
+                  'email',
+                  'phone',
+                  'address',
+                  'country',
+                  'state',
+                  'zip',
+                  'city',
+                ].map((field) => (
+                  <div key={field} className='relative flex flex-col'>
+                    <label className='block text-sm font-medium text-gray-600'>
+                      {field === 'businessname'
+                        ? 'Ärinimi'
+                        : field.charAt(0).toUpperCase() + field.slice(1)}
+                    </label>
+
+                    {!editing || editing !== field ? (
+                      <p className='mt-1 text-gray-800'>
+                        {profile[field as keyof UserProfile]}
+                      </p>
+                    ) : (
+                      <input
+                        type='text'
+                        name={field}
+                        value={formData[field as keyof UserProfile] as string}
+                        onChange={handleChange}
+                        className='mt-1 w-full rounded border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400'
+                      />
+                    )}
+
+                    {/* Edit ikoon paremal */}
+                    <button
+                      onClick={() => handleEdit(field)}
+                      className='absolute right-0 top-0 text-blue-500'
+                    >
+                      <FontAwesomeIcon icon={faEdit} className='h-4 w-4' />
+                    </button>
+
+                    {editing === field && (
+                      <button
+                        onClick={handleSave}
+                        className='mt-2 w-full rounded-lg bg-blue-500 px-4 py-2 text-white shadow transition hover:bg-blue-600'
+                      >
+                        Salvesta muudatused
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ) : (
