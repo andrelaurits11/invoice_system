@@ -24,6 +24,8 @@ ChartJS.register(
 );
 
 interface Invoice {
+  invoice_id: string;
+  company_name: string;
   id: number;
   type: string;
   created_at: string;
@@ -253,7 +255,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className='flex h-screen'>
+    <div className='flex min-h-screen'>
       <div className='flex-1 bg-gray-50 p-6'>
         {/* Filter ja otsing */}
         <div className='mb-6 rounded-lg bg-gray-100 p-4 text-sm shadow'>
@@ -346,11 +348,11 @@ const Dashboard = () => {
             <table className='w-full'>
               <thead>
                 <tr className='border-b text-left'>
-                  <th className='py-2'>Tüüp</th>
-                  <th className='py-2'>Kuupäev</th>
-                  <th className='py-2'>Klient</th>
-                  <th className='py-2'>Staatus</th>
-                  <th className='py-2'>Kokku</th>
+                  <th className='py-2 text-sm'>Tüüp</th>
+                  <th className='py-2 text-sm'>Kuupäev</th>
+                  <th className='py-2 text-sm'>Klient</th>
+                  <th className='py-2 text-sm'>Staatus</th>
+                  <th className='py-2 text-sm'>Kokku</th>
                 </tr>
               </thead>
               <tbody>
@@ -363,13 +365,19 @@ const Dashboard = () => {
                 ) : (
                   invoiceData.map((invoice) => (
                     <tr key={invoice.id} className='border-b'>
-                      <td className='py-2'>{invoice.type}</td>
-                      <td className='py-2'>{invoice.date}</td>
-                      <td className='py-2'>{invoice.client}</td>
+                      <td className='px-4 py-3 text-sm'>
+                        {invoice.invoice_id}
+                      </td>
+                      <td className='px-4 py-3 text-sm'>
+                        {new Date(invoice.created_at).toLocaleDateString()}
+                      </td>
+                      <td className='py-2 text-sm'>
+                        {invoice.company_name || 'N/A'}
+                      </td>
                       <td className='py-2'>
                         {statusMap[invoice.status] || invoice.status}
                       </td>
-                      <td className='py-2'>${invoice.total}</td>
+                      <td className='py-2 text-sm'>${invoice.total}</td>
                     </tr>
                   ))
                 )}
@@ -379,24 +387,24 @@ const Dashboard = () => {
             <table className='w-full'>
               <thead>
                 <tr className='border-b text-left'>
-                  <th className='py-2'>Nimi</th>
-                  <th className='py-2'>E-post</th>
-                  <th className='py-2'>Lisamise kuupäev</th>
+                  <th className='py-2 text-sm'>Nimi</th>
+                  <th className='py-2 text-sm'>E-post</th>
+                  <th className='py-2 text-sm'>Lisamise kuupäev</th>
                 </tr>
               </thead>
               <tbody>
                 {loadingClients ? (
                   <tr className='border-b'>
-                    <td className='py-2' colSpan={3}>
+                    <td className='py-2 text-sm' colSpan={3}>
                       Laadib...
                     </td>
                   </tr>
                 ) : (
                   clientData.map((client) => (
                     <tr key={client.id} className='border-b'>
-                      <td className='py-2'>{client.name}</td>
-                      <td className='py-2'>{client.email}</td>
-                      <td className='py-2'>
+                      <td className='py-2 text-sm'>{client.name}</td>
+                      <td className='py-2 text-sm'>{client.email}</td>
+                      <td className='py-2 text-sm'>
                         {new Date(client.created_at).toLocaleDateString()}
                       </td>
                     </tr>

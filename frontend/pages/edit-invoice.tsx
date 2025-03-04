@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import LayoutMain from '../components/Layout';
+import LayoutMain from '../components/LayoutMain';
 import EditInvoice from '../components/EditInvoice';
 
 const EditInvoicePage = () => {

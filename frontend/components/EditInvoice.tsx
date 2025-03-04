@@ -168,7 +168,7 @@ const EditInvoice = () => {
   };
   const statusOptions = [
     { label: 'Makse ootel', value: 'makse_ootel' },
-    { label: 'Maksutd', value: 'makstud' },
+    { label: 'Makstud', value: 'makstud' },
     { label: 'Ootel', value: 'ootel' },
     { label: 'Osaliselt makstud', value: 'osaliselt_makstud' },
   ];
@@ -220,35 +220,7 @@ const EditInvoice = () => {
     <Layout>
       <div className='flex min-h-screen flex-col'>
         <div className='flex flex-1'>
-          <div className='flex w-1/5 flex-col bg-gray-100 p-6'>
-            <h2 className='mb-6 text-xl font-bold'>Arved</h2>
-            <nav className='flex flex-col space-y-4'>
-              <button
-                onClick={() => router.push('/')}
-                className='text-gray-600'
-              >
-                Töölaud
-              </button>
-              <button
-                onClick={() => router.push('/invoices')}
-                className='font-semibold text-blue-500'
-              >
-                Arved
-              </button>
-              <button
-                onClick={() => router.push('/clients')}
-                className='text-gray-600'
-              >
-                Kliendid
-              </button>
-              <button
-                onClick={logout}
-                className='mt-4 rounded bg-red-500 px-4 py-2 text-white'
-              >
-                Logout
-              </button>
-            </nav>
-          </div>
+          
           <div className='flex flex-1 flex-col bg-gray-50 p-6'>
             <div className='grid flex-1 grid-cols-1 gap-6 lg:grid-cols-3'>
               <div className='rounded bg-white p-6 shadow lg:col-span-2'>
