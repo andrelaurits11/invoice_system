@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faUpload } from '@fortawesome/free-solid-svg-icons';
 import Image from 'next/image';
@@ -21,7 +20,6 @@ interface UserProfile {
 }
 
 const ProfilePage = () => {
-  useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [formData, setFormData] = useState<UserProfile>({
@@ -207,6 +205,7 @@ const ProfilePage = () => {
                 <p className='text-gray-600'>{profile.phone}</p>
               </div>
             </div>
+
             {/* Parem pool: Profiili andmed kahes veerus */}
             <div className='col-span-2 rounded-lg bg-gray-50 p-6 shadow-sm'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
