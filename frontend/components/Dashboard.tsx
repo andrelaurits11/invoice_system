@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
-import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import {
   Chart as ChartJS,
@@ -12,6 +11,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import router from 'next/router';
 
 ChartJS.register(
   CategoryScale,
@@ -29,7 +29,7 @@ interface Invoice {
   created_at: string;
   date: string;
   client: string;
-  status: 'osaliselt_makstud' | 'makse_ootel' | 'ootel' | 'makstud';
+  status: string;
   total: number;
 }
 interface Client {
@@ -102,15 +102,36 @@ const chartOptions = {
 };
 
 const Dashboard = () => {
-  useAuth();
   const [invoiceData, setInvoiceData] = useState<Invoice[]>([]);
   const [clientData, setClientData] = useState<Client[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [loadingClients, setLoadingClients] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Invoice[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [activeTab, setActiveTab] = useState<'invoices' | 'clients'>(
     'invoices',
   );
-
+  const invoiceStatusData = [
+    {
+      title: 'Osaliselt makstud',
+      status: 'osaliselt_makstud',
+      color: 'rgba(100, 100, 100, 0.7)',
+    },
+    {
+      title: 'Makse ootel',
+      status: 'makse_ootel',
+      color: 'rgba(200, 0, 0, 0.7)',
+    },
+    { title: 'Ootel', status: 'ootel', color: 'rgba(0, 123, 255, 1)' },
+    { title: 'Makstud', status: 'makstud', color: 'rgba(0, 200, 0, 0.7)' },
+  ];
+  const statusMap: { [key: string]: string } = {
+    makse_ootel: 'Makse ootel',
+    makstud: 'Makstud',
+    ootel: 'Ootel',
+    osaliselt_makstud: 'Osaliselt makstud',
+  };
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
@@ -174,7 +195,38 @@ const Dashboard = () => {
       .filter((invoice) => invoice.status === status)
       .reduce((sum, invoice) => sum + Number(invoice.total), 0);
   };
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
 
+    setIsSearching(true);
+
+    const fetchSearchResults = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/invoices/`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            },
+          },
+        );
+
+        setSearchResults(response.data);
+      } catch (error) {
+        console.error('Otsing ebaõnnestus:', error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const debounceTimeout = setTimeout(fetchSearchResults, 300); // ⏳ Otsing toimub 300ms viivitusega
+
+    return () => clearTimeout(debounceTimeout);
+  }, [searchQuery]);
   const processMonthlyData = (status: Invoice['status']): number[] => {
     const today = new Date();
     const lastSixMonths = Array.from(
@@ -203,39 +255,69 @@ const Dashboard = () => {
   return (
     <div className='flex h-screen'>
       <div className='flex-1 bg-gray-50 p-6'>
-        <div className='mb-6 flex items-center justify-between'>
-          <input
-            type='text'
-            placeholder='Otsi...'
-            className='w-1/3 rounded border border-gray-300 p-2 shadow'
-          />
-          <button className='rounded bg-blue-600 px-4 py-2 text-white shadow-md'>
-            Uus Arve
-          </button>
+        {/* Filter ja otsing */}
+        <div className='mb-6 rounded-lg bg-gray-100 p-4 text-sm shadow'>
+          {/* Ülemine rida - Flexboxiga sama rea peale */}
+          <div className='flex items-center justify-between gap-4'>
+            {/* Otsingukast koos dropdowniga */}
+            <div className='relative w-[40rem]'>
+              <input
+                type='text'
+                placeholder='Otsi arvet või klienti...'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className='w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300'
+              />
+
+              {/* Otsingu tulemuste dropdown */}
+              {searchQuery.length > 1 && (
+                <div className='absolute left-0 top-full z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg'>
+                  {isSearching ? (
+                    <p className='p-3 text-gray-500'>Otsib...</p>
+                  ) : searchResults.length > 0 ? (
+                    searchResults.map((invoice) => (
+                      <div
+                        key={invoice.id}
+                        className='cursor-pointer px-4 py-2 hover:bg-gray-100'
+                        onClick={() => router.push(`/invoice/${invoice.id}`)}
+                      >
+                        <p className='text-sm font-medium'>{invoice.client}</p>
+                        <p className='text-xs text-gray-500'>
+                          Arve #{invoice.id} – {invoice.total}€
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className='p-3 text-gray-500'>Tulemusi ei leitud</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* "Uus Arve" nupp lingiga */}
+
+            <button
+              onClick={() => router.push(`/new-invoice`)}
+              className='whitespace-nowrap rounded-lg bg-blue-500 px-5 py-2 text-white shadow-md transition hover:bg-blue-600'
+            >
+              Uus Arve
+            </button>
+          </div>
         </div>
         <div className='mb-6 grid grid-cols-4 gap-6'>
-          {[
-            [
-              'Osaliselt makstud',
-              'osaliselt_makstud',
-              'rgba(100, 100, 100, 0.7)',
-            ],
-            ['Makse ootel', 'makse_ootel', 'rgba(200, 0, 0, 0.7)'],
-            ['Ootel', 'ootel', 'rgba(0, 123, 255, 1)'],
-            ['Makstud', 'makstud', 'rgba(0, 200, 0, 0.7)'],
-          ].map(([title, status, color], index) => (
+          {invoiceStatusData.map(({ title, status, color }, index) => (
             <div key={index} className='rounded-lg bg-white p-6 shadow-lg'>
               <h3 className='text-xl font-semibold text-gray-700'>
-                ${processInvoiceData(status as Invoice['status']).toFixed(2)}
+                {processInvoiceData(status as Invoice['status']).toFixed(2)}
               </h3>
               <p className='text-gray-500'>{title}</p>
               <div className='mt-4 h-40 w-full'>
                 <Line
                   key={status}
                   data={generateChartData(
-                    title as string,
+                    title,
                     processMonthlyData(status as Invoice['status']),
-                    color as string,
+                    color,
                   )}
                   options={chartOptions}
                 />
@@ -243,7 +325,7 @@ const Dashboard = () => {
             </div>
           ))}
         </div>
-
+        ;
         <div className='flex border-b border-gray-300'>
           <button
             className={`px-6 py-2 font-semibold ${activeTab === 'invoices' ? 'border-b-2 border-blue-500 text-blue-500' : 'text-gray-500'}`}
@@ -258,7 +340,6 @@ const Dashboard = () => {
             Viimased Kliendid
           </button>
         </div>
-
         {/* Tabel vastavalt aktiivsele tab'ile */}
         <div className='rounded bg-white p-6 shadow-lg'>
           {activeTab === 'invoices' ? (
@@ -285,7 +366,9 @@ const Dashboard = () => {
                       <td className='py-2'>{invoice.type}</td>
                       <td className='py-2'>{invoice.date}</td>
                       <td className='py-2'>{invoice.client}</td>
-                      <td className='py-2'>{invoice.status}</td>
+                      <td className='py-2'>
+                        {statusMap[invoice.status] || invoice.status}
+                      </td>
                       <td className='py-2'>${invoice.total}</td>
                     </tr>
                   ))

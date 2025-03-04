@@ -15,12 +15,12 @@ const Sidebar = () => {
       <div
         className={`${
           isOpen ? 'w-64' : 'w-20'
-        } flex flex-col bg-gray-900 p-5 text-white transition-all duration-300`}
+        } flex flex-col bg-slate-900 p-5 text-white transition-all duration-300`}
       >
         {/* Toggle Button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className='mb-7 self-end rounded bg-gray-800 p-2 text-white'
+          className='mb-7 self-end rounded bg-slate-900 p-2 text-white'
         >
           {isOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
