@@ -196,7 +196,7 @@ const NewInvoiceForm = () => {
       phone: client.phone,
       address1: client.address,
       address2: client.address2 || '',
-      city: client.state || '',
+      city: client.city || '',
       state: client.state || '',
       zip: client.zip || '',
       country: client.country || '',
@@ -232,7 +232,7 @@ const NewInvoiceForm = () => {
     companyDetails: CompanyDetails,
     invoiceDetails: InvoiceDetails,
     profile: Profile,
-    logoBase64: logoBase64,
+    logoBase64: string,
   ): Promise<Blob | null> => {
     try {
       console.log('🛠 Kontrollime `InvoicePreview` andmeid:', {

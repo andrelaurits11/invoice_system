@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
+import router from 'next/router';
+import { Pencil } from 'lucide-react';
 
 interface Client {
   id: number;
@@ -59,40 +61,53 @@ const ClientTable = () => {
   );
 
   return (
-    <div className='flex h-screen'>
+    <div className='flex'>
       <div className='flex-1 bg-gray-50 p-6'>
-        <div className='mb-6 flex items-center justify-between'>
-          <input
-            type='text'
-            placeholder='Otsi kliendi nime järgi...'
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className='w-1/3 rounded border border-gray-300 p-2'
-          />
-          <Link href='/new-client'>
-            <button className='rounded bg-blue-500 px-4 py-2 text-white'>
-              Uus Klient
-            </button>
-          </Link>
+        <div className='mb-6 flex flex-col gap-4 rounded-lg bg-gray-100 p-4 text-sm shadow'>
+          <div className='flex items-center justify-between gap-4'>
+            <input
+              type='text'
+              placeholder='Otsi kliendi nime järgi...'
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className='w-[40rem] rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-300'
+            />
+            <Link href='/new-client'>
+              <button className='flex items-center gap-2 rounded-lg bg-blue-500 px-5 py-2 text-white shadow-md transition hover:bg-blue-600'>
+                Uus Klient
+              </button>
+            </Link>
+          </div>
         </div>
 
         <table className='w-full border-collapse rounded bg-white shadow'>
           <thead>
             <tr className='border-b text-left'>
-              <th className='py-2'>Company</th>
-              <th className='py-2'>Contact</th>
-              <th className='py-2'>Email</th>
-              <th className='py-2'>Phone</th>
+              <th className='px-4 py-3'>Ettevõtte</th>
+              <th className='px-4 py-3'>Kontakt</th>
+              <th className='px-4 py-3'>Email</th>
+              <th className='px-4 py-3'>Telefon</th>
+              <th className='px-4 py-3'></th>
             </tr>
           </thead>
           <tbody>
             {displayedClients.length > 0 ? (
               displayedClients.map((client) => (
                 <tr className='border-b' key={client.id}>
-                  <td className='border p-2'>{client.company_name}</td>
-                  <td className='border p-2'>{client.contact_person}</td>
-                  <td className='border p-2'>{client.email}</td>
-                  <td className='border p-2'>{client.phone}</td>
+                  <td className='px-4 py-3'>{client.company_name}</td>
+                  <td className='px-4 py-3'>{client.contact_person}</td>
+                  <td className='px-4 py-3'>{client.email}</td>
+                  <td className='px-4 py-3'>{client.phone}</td>
+                  <td className='px-4 py-3'>
+                    <button
+                      onClick={() =>
+                        router.push(`/edit-client?id=${client.id}`)
+                      }
+                      className='flex items-center justify-center rounded bg-blue-400 px-3 py-2 text-white hover:bg-blue-600'
+                    >
+                      <Pencil className='h-5 w-5 stroke-[1.8]' />
+                    </button>
+                  </td>
                 </tr>
               ))
             ) : (

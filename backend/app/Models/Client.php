@@ -20,5 +20,6 @@ class Client extends Model
         'zip',
         'country',
         'user_id', // Lisa kasutaja ID täidetavate väljade hulka
+        'city',
     ];
 }

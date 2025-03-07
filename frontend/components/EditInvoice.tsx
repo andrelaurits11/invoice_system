@@ -3,7 +3,6 @@ import Layout from './Layout';
 import InvoicePreview from './InvoicePreview';
 import { useRouter } from 'next/router';
 import axios from 'axios';
-import { useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
 import Select from 'react-select';
 
@@ -18,6 +17,7 @@ interface Profile {
   zip: string;
   country: string;
   businessname: string;
+  logo_picture?: string | null;
 }
 
 interface CompanyDetails {
@@ -60,7 +60,6 @@ const fetchProfileData = async () => {
 
 const EditInvoice = () => {
   const router = useRouter();
-  const { logout } = useAuth();
   const { id } = router.query;
   const [status, setStatus] = useState<string>('makse_ootel');
   const [profile, setProfile] = useState<Profile>({
@@ -178,6 +177,33 @@ const EditInvoice = () => {
       setStatus(selectedOption.value);
     }
   };
+  // Pildi laadimine Base64 formaadis
+  const fetchImageAsBase64 = async (imageUrl: string): Promise<string> => {
+    try {
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error('Pildi laadimine ebaõnnestus');
+
+      const blob = await response.blob();
+      const reader = new FileReader();
+      return new Promise((resolve) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Pildi laadimine ebaõnnestus:', error);
+      return '/Test-IMG.png';
+    }
+  };
+  const [logoBase64, setLogoBase64] = useState<string>('/Test-IMG.png');
+
+  useEffect(() => {
+    if (profile.logo_picture) {
+      const imageUrl = `/api/storage/${profile.logo_picture}`;
+
+      console.log('Pildi URL:', imageUrl);
+      fetchImageAsBase64(imageUrl).then(setLogoBase64);
+    }
+  }, [profile.logo_picture]);
 
   const saveInvoice = async () => {
     const payload = {
@@ -283,6 +309,7 @@ const EditInvoice = () => {
                   companyDetails={companyDetails}
                   invoiceDetails={invoiceDetails}
                   profile={profile}
+                  logoBase64={logoBase64}
                 />
               </div>
             </div>
