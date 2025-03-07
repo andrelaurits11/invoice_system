@@ -117,25 +117,11 @@ const Dashboard = () => {
   const [activeTab, setActiveTab] = useState<'invoices' | 'clients'>(
     'invoices',
   );
-  const invoiceStatusData = [
-    {
-      title: 'Osaliselt makstud',
-      status: 'osaliselt_makstud',
-      color: 'rgba(100, 100, 100, 0.7)',
-    },
-    {
-      title: 'Makse ootel',
-      status: 'makse_ootel',
-      color: 'rgba(200, 0, 0, 0.7)',
-    },
-    { title: 'Ootel', status: 'ootel', color: 'rgba(0, 123, 255, 1)' },
-    { title: 'Makstud', status: 'makstud', color: 'rgba(0, 200, 0, 0.7)' },
-  ];
+
   const statusMap: { [key: string]: string } = {
     makse_ootel: 'Makse ootel',
     makstud: 'Makstud',
     ootel: 'Ootel',
-    osaliselt_makstud: 'Osaliselt makstud',
   };
   useEffect(() => {
     const fetchLatestInvoices = async () => {
@@ -216,11 +202,6 @@ const Dashboard = () => {
     fetchInvoiceDataForCharts();
   }, []);
 
-  const processInvoiceData = (status: Invoice['status']): number => {
-    return invoiceData
-      .filter((invoice) => invoice.status === status)
-      .reduce((sum, invoice) => sum + Number(invoice.total), 0);
-  };
   useEffect(() => {
     if (searchQuery.length < 2) {
       setSearchResults([]);
@@ -253,6 +234,66 @@ const Dashboard = () => {
 
     return () => clearTimeout(debounceTimeout);
   }, [searchQuery]);
+
+  const invoiceStatusData = [
+    {
+      title: 'Kõik Arved',
+      status: '', // Kõik arved, ilma filtrita
+      color: 'rgba(100, 100, 100, 0.7)', // Värv
+    },
+    {
+      title: 'Makse ootel',
+      status: 'makse_ootel',
+      color: 'rgba(200, 0, 0, 0.7)',
+    },
+    { title: 'Ootel', status: 'ootel', color: 'rgba(0, 123, 255, 1)' },
+    { title: 'Makstud', status: 'makstud', color: 'rgba(0, 200, 0, 0.7)' },
+  ];
+
+  // Funktsioon, mis töötab välja kõigi arvete kokkuvõtte.
+  const processInvoiceData = (status: Invoice['status']): string => {
+    const today = new Date();
+    const lastMonth = today.getMonth(); // Viimane kuu (praegune kuu)
+    const lastMonthYear = today.getFullYear(); // Viimane kuu aasta
+
+    // NumberFormatter funktsioon summa vormindamiseks
+    const numberFormatter = new Intl.NumberFormat('en-US', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
+    // Kui seisund on tühi, siis summeerime kõik arved, mis on eelmisel kuul.
+    if (status === '') {
+      const sum = invoiceDataForCharts
+        .filter((invoice) => {
+          const invoiceDate = new Date(invoice.created_at);
+          return (
+            invoiceDate.getMonth() === lastMonth && // Kontrollime, kas kuu on viimane
+            invoiceDate.getFullYear() === lastMonthYear // Kontrollime, kas aasta on õige
+          );
+        })
+        .reduce((sum, invoice) => sum + Number(invoice.total), 0);
+
+      return numberFormatter.format(sum); // Tagastame vormindatud numbri
+    }
+
+    // Kui on konkreetne seisund, siis summeerime ainult selle seisundiga arvete summad eelmisel kuul.
+    const sum = invoiceDataForCharts
+      .filter((invoice) => {
+        const invoiceDate = new Date(invoice.created_at);
+        return (
+          invoiceDate.getMonth() === lastMonth &&
+          invoiceDate.getFullYear() === lastMonthYear &&
+          invoice.status === status
+        );
+      })
+      .reduce((sum, invoice) => sum + Number(invoice.total), 0);
+
+    return numberFormatter.format(sum); // Tagastame vormindatud numbri
+  };
+
+  // Diagrammi andmete genereerimine
   const processMonthlyDataForCharts = (status: Invoice['status']): number[] => {
     const today = new Date();
     const lastSixMonths = Array.from(
@@ -270,7 +311,7 @@ const Dashboard = () => {
 
       const month = date.getMonth();
       const index = lastSixMonths.indexOf(month);
-      if (index !== -1 && invoice.status === status) {
+      if (index !== -1 && (status === '' || invoice.status === status)) {
         months[index] += Number(invoice.total);
       }
     });
@@ -334,7 +375,7 @@ const Dashboard = () => {
           {invoiceStatusData.map(({ title, status, color }, index) => (
             <div key={index} className='rounded-lg bg-white p-6 shadow-lg'>
               <h3 className='text-xl font-semibold text-gray-700'>
-                {processInvoiceData(status as Invoice['status']).toFixed(2)}
+                {processInvoiceData(status as Invoice['status'])}
               </h3>
               <p className='text-gray-500'>{title}</p>
               <div className='mt-4 h-40 w-full'>
