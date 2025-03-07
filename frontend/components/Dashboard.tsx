@@ -72,7 +72,6 @@ const generateChartData = (label: string, data: number[], color: string) => ({
       data: data.length ? data : Array(6).fill(0),
       borderColor: color, // Joone värv
       backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.3)'), // ✅ Läbipaistvusega täitevärv
-      fill: true, // ✅ Täida ala joone all
       borderWidth: 2,
       pointRadius: 4,
       pointBackgroundColor: color,
