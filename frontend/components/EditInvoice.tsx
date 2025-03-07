@@ -220,7 +220,6 @@ const EditInvoice = () => {
     <Layout>
       <div className='flex min-h-screen flex-col'>
         <div className='flex flex-1'>
-          
           <div className='flex flex-1 flex-col bg-gray-50 p-6'>
             <div className='grid flex-1 grid-cols-1 gap-6 lg:grid-cols-3'>
               <div className='rounded bg-white p-6 shadow lg:col-span-2'>

@@ -195,7 +195,7 @@ class InvoiceController extends Controller
 
         // Check if the file was stored successfully
         if (!Storage::exists($pdfPath)) {
-            \Log::error("❌ PDF saving failed: $pdfPath");
+            \Log::error("PDF saving failed: $pdfPath");
             return response()->json(['error' => 'PDF saving failed.'], 500);
         }
 

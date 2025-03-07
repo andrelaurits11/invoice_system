@@ -42,12 +42,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/invoices/{id}', [InvoiceController::class, 'destroy']);
     // E-kirja saatmine kõikidele aadressidele
     Route::post('/invoices/send', function (Request $request) {
-        // ✅ Kontrollime, kas `user_id` eksisteerib
+        // Kontrollime, kas `user_id` eksisteerib
         if (!$request->has('user_id')) {
             return response()->json(['error' => 'Kasutaja ID puudub.'], 400);
         }
 
-        // ✅ Logime, et näha, kas `user_id` tuli API päringuga
+        // Logime, et näha, kas `user_id` tuli API päringuga
         \Log::info('API sai user_id:', ['user_id' => $request->user_id]);
 
         // Otsi kasutaja andmebaasist
@@ -68,7 +68,7 @@ Route::middleware('auth:sanctum')->group(function () {
             'senderName'  => $user->businessname, // Võtame nime Users tabelist
         ];
 
-        // ✅ Logime, et näha, mis andmed meilisaatmisele lähevad
+        // Logime, et näha, mis andmed meilisaatmisele lähevad
         \Log::info('Saatmise andmed:', $mailData);
 
         try {

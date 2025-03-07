@@ -111,6 +111,9 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Invoice[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [invoiceDataForCharts, setInvoiceDataForCharts] = useState<Invoice[]>(
+    [],
+  );
   const [activeTab, setActiveTab] = useState<'invoices' | 'clients'>(
     'invoices',
   );
@@ -135,7 +138,7 @@ const Dashboard = () => {
     osaliselt_makstud: 'Osaliselt makstud',
   };
   useEffect(() => {
-    const fetchInvoices = async () => {
+    const fetchLatestInvoices = async () => {
       try {
         const response = await axios.get('http://localhost:8000/api/invoices', {
           headers: {
@@ -152,12 +155,13 @@ const Dashboard = () => {
             .slice(0, 6),
         );
       } catch (error) {
-        console.error('❌ Viga arvete laadimisel:', error);
+        console.error('❌ Viga viimaste arvete laadimisel:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchInvoices();
+
+    fetchLatestInvoices();
   }, []);
 
   useEffect(() => {
@@ -191,6 +195,26 @@ const Dashboard = () => {
       fetchClients();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    const fetchInvoiceDataForCharts = async () => {
+      try {
+        const response = await axios.get('http://localhost:8000/api/invoices', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        });
+        setInvoiceDataForCharts(response.data); // See peaks olema uus state, mida kasutame ainult diagrammides
+      } catch (error) {
+        console.error(
+          '❌ Viga arvete andmete laadimisel diagrammide jaoks:',
+          error,
+        );
+      }
+    };
+
+    fetchInvoiceDataForCharts();
+  }, []);
 
   const processInvoiceData = (status: Invoice['status']): number => {
     return invoiceData
@@ -229,7 +253,7 @@ const Dashboard = () => {
 
     return () => clearTimeout(debounceTimeout);
   }, [searchQuery]);
-  const processMonthlyData = (status: Invoice['status']): number[] => {
+  const processMonthlyDataForCharts = (status: Invoice['status']): number[] => {
     const today = new Date();
     const lastSixMonths = Array.from(
       { length: 6 },
@@ -237,7 +261,7 @@ const Dashboard = () => {
     );
     const months = Array(6).fill(0);
 
-    invoiceData.forEach((invoice) => {
+    invoiceDataForCharts.forEach((invoice) => {
       const date = new Date(invoice.created_at);
       if (isNaN(date.getTime())) {
         console.warn('⚠️ Vigane kuupäev:', invoice.created_at);
@@ -318,7 +342,7 @@ const Dashboard = () => {
                   key={status}
                   data={generateChartData(
                     title,
-                    processMonthlyData(status as Invoice['status']),
+                    processMonthlyDataForCharts(status as Invoice['status']),
                     color,
                   )}
                   options={chartOptions}
