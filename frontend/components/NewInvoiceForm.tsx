@@ -301,11 +301,11 @@ const NewInvoiceForm = () => {
       );
 
       if (response.status === 201) {
-        alert('Invoice saved successfully!');
+        alert('Arve salvestatud edukalt!'); // Teavitus
         router.push('/invoices');
       }
     } catch {
-      alert('Failed to save invoice.');
+      alert('Arve salvestamine ebaõnnestus!'); // Veateavitus
     }
   };
 
@@ -358,7 +358,7 @@ const NewInvoiceForm = () => {
       );
 
       if (saveResponse.status !== 201) {
-        throw new Error('❌ Arve salvestamine ebaõnnestus.');
+        throw new Error(' Arve salvestamine ebaõnnestus.');
       }
 
       console.log('✅ Arve salvestatud edukalt!');

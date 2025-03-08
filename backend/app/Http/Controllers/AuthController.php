@@ -91,7 +91,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    return response()->json(['message' => 'Invalid credentials'], 401);
+    return response()->json(['message' => 'Vale parool'], 401);
 }
 
 

@@ -11,7 +11,9 @@ interface AuthContextType {
 // Loome konteksti vaikeseaded
 const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   login: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   logout: () => {},
 });
 

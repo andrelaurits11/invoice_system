@@ -45,7 +45,7 @@ class TwoFactorController extends Controller
 
         Log::info('2FA enabled for user: ' . auth()->id());
 
-        $url = 'otpauth://totp/MyApp:' . auth()->user()->email . '?secret=' . $secret . '&issuer=MyApp&algorithm=SHA1&digits=6&period=30';
+        $url = 'otpauth://totp/PaydashPro:' . auth()->user()->email . '?secret=' . $secret . '&issuer=PaydashPro&algorithm=SHA1&digits=6&period=30';
         $qrCodeUrl = 'https://api.qrserver.com/v1/create-qr-code/?data=' . urlencode($url) . '&size=200x200';
 
         return response()->json(['qrCodeUrl' => $qrCodeUrl, 'secret' => $secret]);

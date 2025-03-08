@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import axios from 'axios';
@@ -139,8 +140,12 @@ const Dashboard = () => {
             )
             .slice(0, 6),
         );
-      } catch (error) {
-        console.error('❌ Viga viimaste arvete laadimisel:', error);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        // Ignoreerime 401 vigu, ei tee midagi
+        if (error.response?.status !== 401) {
+          console.error('❌ Viga viimaste arvete laadimisel:', error);
+        }
       } finally {
         setLoading(false);
       }
@@ -171,8 +176,12 @@ const Dashboard = () => {
               )
               .slice(0, 6),
           );
-        } catch (error) {
-          console.error('❌ Viga klientide laadimisel:', error);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          // Ignoreerime 401 vigu, ei tee midagi
+          if (error.response?.status !== 401) {
+            console.error('❌ Viga klientide laadimisel:', error);
+          }
         } finally {
           setLoadingClients(false);
         }
@@ -190,11 +199,15 @@ const Dashboard = () => {
           },
         });
         setInvoiceDataForCharts(response.data); // See peaks olema uus state, mida kasutame ainult diagrammides
-      } catch (error) {
-        console.error(
-          '❌ Viga arvete andmete laadimisel diagrammide jaoks:',
-          error,
-        );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        // Ignoreerime 401 vigu, ei tee midagi
+        if (error.response?.status !== 401) {
+          console.error(
+            '❌ Viga arvete andmete laadimisel diagrammide jaoks:',
+            error,
+          );
+        }
       }
     };
 
@@ -222,8 +235,12 @@ const Dashboard = () => {
         );
 
         setSearchResults(response.data);
-      } catch (error) {
-        console.error('Otsing ebaõnnestus:', error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (error: any) {
+        // Ignoreerime 401 vigu, ei tee midagi
+        if (error.response?.status !== 401) {
+          console.error('Otsing ebaõnnestus:', error);
+        }
       } finally {
         setIsSearching(false);
       }
