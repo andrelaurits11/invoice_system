@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserGoogle2FA;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+
 
 class AuthController extends Controller
 {
@@ -53,31 +55,45 @@ class AuthController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request)
-    {
-        // Validate incoming data
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+{
+    // Validate incoming data
+    $validator = Validator::make($request->all(), [
+        'email' => 'required|string|email',
+        'password' => 'required|string',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
+    }
 
-        // Attempt to log in the user
-        if (Auth::attempt($request->only('email', 'password'))) {
-            $user = Auth::user();
-            $token = $user->createToken('API Token')->plainTextToken;
+    // Attempt to log in the user
+    if (Auth::attempt($request->only('email', 'password'))) {
+        $user = Auth::user();
 
+        // Kontrollige, kas 2FA on aktiveeritud
+        $userGoogle2FA = UserGoogle2FA::where('user_id', $user->id)->first();
+        if ($userGoogle2FA) {
+            // Kui 2FA on aktiveeritud, tagastage vajalik 2FA staatuse teade
             return response()->json([
-                'message' => 'Login successful',
+                'message' => '2FA is enabled, please provide the verification code.',
+                'requires_2fa' => true,
                 'user' => $user,
-                'token' => $token, // Return token
             ], 200);
         }
 
-        return response()->json(['message' => 'Invalid credentials'], 401);
+        // Kui 2FA ei ole aktiveeritud, logige sisse nagu tavaliselt
+        $token = $user->createToken('API Token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => $user,
+            'token' => $token, // Return token
+        ], 200);
     }
+
+    return response()->json(['message' => 'Invalid credentials'], 401);
+}
+
 
     /**
      * Logout the current user and invalidate the token.

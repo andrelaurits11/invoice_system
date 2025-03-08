@@ -12,6 +12,10 @@ const nextConfig: NextConfig = {
         hostname: 'tailwindui.com',
       },
       {
+        protocol: 'https',
+        hostname: 'api.qrserver.com',
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
         port: '8000',

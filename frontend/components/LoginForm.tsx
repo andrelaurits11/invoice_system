@@ -24,7 +24,12 @@ const LoginForm = () => {
 
       login(response.data.token);
 
-      router.push('/');
+      // Suurendatud: kontrollime 2FA olek ja suuname sobivale lehele
+      if (response.data.requires_2fa) {
+        router.push(`/verify-2fa?email=${encodeURIComponent(email)}`);
+      } else {
+        router.push('/'); // Kui 2FA ei ole vajalik, suuna koju
+      }
     } catch (err) {
       if (axios.isAxiosError(err)) {
         setError(err.response?.data?.message || 'Login failed.');

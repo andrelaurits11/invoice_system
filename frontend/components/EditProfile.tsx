@@ -38,9 +38,13 @@ const ProfilePage = () => {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [isTwoFactorEnabled, setIsTwoFactorEnabled] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
+  const [showQRCodeModal, setShowQRCodeModal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchProfile();
+    checkTwoFactorStatus();
   }, []);
 
   const fetchProfile = async () => {
@@ -58,20 +62,52 @@ const ProfilePage = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+  const checkTwoFactorStatus = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/api/check-2fa', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
+      setIsTwoFactorEnabled(response.data.enabled);
+    } catch (error) {
+      console.error('Error checking 2FA status:', error);
+    }
   };
 
+  const handleEnable2FA = async () => {
+    try {
+      const response = await axios.post(
+        'http://localhost:8000/api/enable-2fa',
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+        },
+      );
+
+      if (response.data.qrCodeUrl) {
+        setQrCodeUrl(response.data.qrCodeUrl);
+        setShowQRCodeModal(true); // Show the QR code modal
+        alert('Google Authenticator on nüüd lubatud! Skaneeri QR-kood.');
+      } else {
+        alert('QR-kood ei saanud korralikult loodud.');
+      }
+    } catch (error) {
+      console.error('Error enabling 2FA:', error);
+      alert('2FA aktiveerimine ebaõnnestus.');
+    }
+  };
+
+  // Handle file change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
   };
 
+  // Handle file upload
   const handleFileUpload = async () => {
     if (!selectedFile) return alert('Palun vali fail!');
 
@@ -107,15 +143,24 @@ const ProfilePage = () => {
     }
   };
 
+  // Handle form data change
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  // Handle edit
   const handleEdit = (field: string) => {
     setEditing(field);
   };
 
+  // Handle save
   const handleSave = async () => {
     try {
       const updateData = new FormData();
-
-      // Lisa ainult muudetav väli
       if (editing && formData[editing as keyof UserProfile] !== undefined) {
         updateData.append(
           editing,
@@ -134,13 +179,18 @@ const ProfilePage = () => {
         },
       );
 
-      setProfile(response.data.user); // Uuenda profiili andmeid
-      setEditing(null); // Peida sisestusväli
+      setProfile(response.data.user);
+      setEditing(null);
       alert('Profiil edukalt uuendatud!');
     } catch (error) {
       console.error('Update error:', error);
       alert('Profiili uuendamine ebaõnnestus.');
     }
+  };
+
+  // Close QR Code Modal
+  const closeQRCodeModal = () => {
+    setShowQRCodeModal(false);
   };
 
   return (
@@ -150,7 +200,6 @@ const ProfilePage = () => {
 
         {profile ? (
           <div className='grid gap-6 md:grid-cols-3'>
-            {/* Vasak pool: Profiilipilt ja põhiinfo */}
             <div className='flex flex-col items-center rounded-lg bg-gray-50 p-6 shadow-sm'>
               <div
                 className='group relative cursor-pointer'
@@ -170,13 +219,11 @@ const ProfilePage = () => {
                   </div>
                 )}
 
-                {/* Hoveril nähtav tekst */}
                 <div className='absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50 opacity-0 transition-opacity duration-300 group-hover:opacity-100'>
                   <span className='font-semibold text-white'>Uuenda pilti</span>
                 </div>
               </div>
 
-              {/* Peidetud failivalija */}
               <input
                 type='file'
                 id='fileInput'
@@ -184,7 +231,6 @@ const ProfilePage = () => {
                 className='hidden'
               />
 
-              {/* Laadi üles nupp */}
               {selectedFile && (
                 <button
                   onClick={handleFileUpload}
@@ -195,18 +241,8 @@ const ProfilePage = () => {
                   {uploading ? 'Laadin üles...' : 'Laadi uus pilt'}
                 </button>
               )}
-
-              {/* Ärinimi, email, telefon */}
-              <div className='mt-4 text-center'>
-                <h2 className='text-xl font-semibold'>
-                  {profile.businessname}
-                </h2>
-                <p className='text-gray-600'>{profile.email}</p>
-                <p className='text-gray-600'>{profile.phone}</p>
-              </div>
             </div>
 
-            {/* Parem pool: Profiili andmed kahes veerus */}
             <div className='col-span-2 rounded-lg bg-gray-50 p-6 shadow-sm'>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
                 {[
@@ -240,7 +276,6 @@ const ProfilePage = () => {
                       />
                     )}
 
-                    {/* Edit ikoon paremal */}
                     <button
                       onClick={() => handleEdit(field)}
                       className='absolute right-0 top-0 text-blue-500'
@@ -259,6 +294,16 @@ const ProfilePage = () => {
                   </div>
                 ))}
               </div>
+
+              <div>
+                {!isTwoFactorEnabled ? (
+                  <button onClick={handleEnable2FA}>
+                    Registreeri Google Authenticator
+                  </button>
+                ) : (
+                  <div></div>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -267,6 +312,26 @@ const ProfilePage = () => {
           </p>
         )}
       </div>
+
+      {/* QR Code Modal */}
+      {showQRCodeModal && (
+        <div className='fixed inset-0 flex items-center justify-center bg-black bg-opacity-50'>
+          <div className='rounded-lg bg-white p-8'>
+            <h2 className='mb-4 text-2xl'>Skaneeri QR-kood</h2>
+            {qrCodeUrl && (
+              <Image
+                src={qrCodeUrl}
+                alt='QR Code for Google Authenticator'
+                width={200}
+                height={200}
+              />
+            )}
+            <button onClick={closeQRCodeModal} className='mt-4 text-blue-500'>
+              Sulge
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
