@@ -91,7 +91,7 @@ class AuthController extends Controller
         ], 200);
     }
 
-    return response()->json(['message' => 'Vale parool'], 401);
+    return response()->json(['message' => 'Vale kasutajanimi või parool'], 401);
 }
 
 

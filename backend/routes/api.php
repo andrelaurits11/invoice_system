@@ -11,6 +11,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TwoFactorController;
 use App\Mail\InvoiceMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Password;
+use App\Http\Controllers\Auth\NewPasswordController;
+
 
 // Avalikud marsruudid
 Route::get('/check-2fa', [TwoFactorController::class, 'check']);
@@ -18,6 +21,17 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/verify-2fa', [TwoFactorController::class, 'verify']);
 Route::post('/verify-2fa', [TwoFactorController::class, 'verify2FA']);
+Route::post('/reset-password', [NewPasswordController::class, 'store']);
+Route::post('/forgot-password', function (Request $request) {
+    $request->validate(['email' => 'required|email']);
+
+    $status = Password::sendResetLink($request->only('email'));
+
+    return $status === Password::RESET_LINK_SENT
+        ? response()->json(['message' => __($status)])
+        : response()->json(['message' => __($status)], 400);
+});
+
 
 
 

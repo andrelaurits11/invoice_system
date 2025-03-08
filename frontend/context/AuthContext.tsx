@@ -37,7 +37,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Suuname kasutaja, kui ta pole autentitud ja üritab pääseda kaitstud lehele
   useEffect(() => {
-    const publicRoutes = ['/login', '/register']; // Lehed, kuhu saab ilma autentimiseta
+    const publicRoutes = [
+      '/login',
+      '/register',
+      '/request-password',
+      '/verify-2fa',
+      '/password-reset/[token]',
+    ]; // Lehed, kuhu saab ilma autentimiseta
     if (
       !loading &&
       !isAuthenticated &&

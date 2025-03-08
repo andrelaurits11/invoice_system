@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Notifications\ResetPasswordNotification; // ✅ Lisa import
 
 class User extends Authenticatable
 {
@@ -47,6 +48,14 @@ class User extends Authenticatable
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at',
+        'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Saadab parooli lähtestamise e-kirja kasutades kohandatud `ResetPasswordNotification` klassi.
+     */
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
+    }
 }

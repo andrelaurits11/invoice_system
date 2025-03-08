@@ -61,11 +61,11 @@ const RegisterForm = () => {
           <div className='mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-32 lg:text-left'>
             <form onSubmit={handleRegister}>
               <h2 className='mb-4 text-2xl font-bold text-stone-50'>
-                Register
+                Registreeru
               </h2>
               <input
                 type='text'
-                placeholder='Name'
+                placeholder='Nimi'
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -81,7 +81,7 @@ const RegisterForm = () => {
               />
               <input
                 type='email'
-                placeholder='Confirm Email'
+                placeholder='Kinnita Email'
                 value={confirmEmail}
                 onChange={(e) => setConfirmEmail(e.target.value)}
                 required
@@ -89,7 +89,7 @@ const RegisterForm = () => {
               />
               <input
                 type='password'
-                placeholder='Password'
+                placeholder='Parool'
                 value={password}
                 onFocus={() => setShowPasswordRules(true)}
                 onBlur={() => setShowPasswordRules(password !== '')}
@@ -152,16 +152,16 @@ const RegisterForm = () => {
                 disabled={!isFormValid}
                 className={`mb-3 w-full rounded p-2 text-white ${isFormValid ? 'bg-blue-500 hover:bg-blue-600' : 'cursor-not-allowed bg-gray-400'}`}
               >
-                Register
+                Registreeru
               </button>
               {error && <p className='text-red-500'>{error}</p>}
               <p className='text-stone-50'>
-                Already have an account?{' '}
+                Kasutaja juba olemas?{' '}
                 <Link
                   href='/login'
                   className='text-blue-500 hover:text-blue-300'
                 >
-                  Login here
+                  Logi sisse
                 </Link>
               </p>
             </form>

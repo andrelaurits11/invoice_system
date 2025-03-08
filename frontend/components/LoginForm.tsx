@@ -67,7 +67,9 @@ const LoginForm = () => {
           </svg>
           <div className='mx-auto max-w-md text-center lg:mx-0 lg:flex-auto lg:py-32 lg:text-left'>
             <form onSubmit={handleLogin}>
-              <h2 className='mb-4 text-2xl font-bold text-stone-50'>Login</h2>
+              <h2 className='mb-4 text-2xl font-bold text-stone-50'>
+                Logi sisse
+              </h2>
               <input
                 type='email'
                 placeholder='Email'
@@ -78,7 +80,7 @@ const LoginForm = () => {
               />
               <input
                 type='password'
-                placeholder='Password'
+                placeholder='Parool'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -88,16 +90,26 @@ const LoginForm = () => {
                 type='submit'
                 className='mb-3 w-full rounded bg-blue-500 p-2 text-white'
               >
-                Login
+                Logi sisse
               </button>
               {error && <p className='text-red-500'>{error}</p>}
               <p className='text-stone-50'>
-                Don&#39;t have an account?{' '}
+                Ei mäleta parooli?{' '}
+                <Link
+                  href='/request-password'
+                  className='text-blue-500 hover:text-blue-300'
+                >
+                  Lähtesta parool
+                </Link>
+              </p>
+
+              <p className='text-stone-50'>
+                Pole kontot?{' '}
                 <Link
                   href='/register'
                   className='text-blue-500 hover:text-blue-300'
                 >
-                  Register here
+                  Registreeru siin
                 </Link>
               </p>
             </form>
