@@ -1,6 +1,11 @@
 
 # Invoice Management System
 
+<p align="center">
+  <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Laravel.svg" alt="Laravel Logo" width="100"/>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg" alt="Next.js Logo" width="120"/>
+</p>
+
 A web-based invoicing and client management system built using **Laravel** (backend) and **Next.js** (frontend). The system is designed to help users easily manage and track their invoices and clients. It features an intuitive interface with detailed analytics and real-time updates.
 
 ## Features
