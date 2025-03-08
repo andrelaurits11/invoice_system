@@ -17,10 +17,13 @@ const LoginForm = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:8000/api/login', {
-        email,
-        password,
-      });
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/login`,
+        {
+          email,
+          password,
+        },
+      );
 
       login(response.data.token);
 

@@ -45,12 +45,15 @@ const InvoiceTable = () => {
 
   const fetchInvoices = useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/invoices', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/invoices`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          params: { sort: '-created_at' }, // Sortimine serveri poolt
         },
-        params: { sort: '-created_at' }, // Sortimine serveri poolt
-      });
+      );
 
       if (Array.isArray(response.data)) {
         setAllInvoices(response.data);

@@ -126,7 +126,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchLatestInvoices = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/invoices', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/invoices`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
@@ -160,7 +160,7 @@ const Dashboard = () => {
         setLoadingClients(true);
         try {
           const response = await axios.get(
-            'http://localhost:8000/api/clients',
+            `${process.env.NEXT_PUBLIC_API_URL}/clients`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem('authToken')}`,
@@ -193,7 +193,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchInvoiceDataForCharts = async () => {
       try {
-        const response = await axios.get('http://localhost:8000/api/invoices', {
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/invoices`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`,
           },
@@ -226,7 +226,7 @@ const Dashboard = () => {
     const fetchSearchResults = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/invoices/`,
+          `${process.env.NEXT_PUBLIC_API_URL}/invoices/`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`,

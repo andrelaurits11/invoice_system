@@ -24,11 +24,14 @@ const ClientTable = () => {
 
   const fetchClients = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/clients', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/clients`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
         },
-      });
+      );
 
       // Sorteerime kõige uuemad kõige ette
       const sortedClients = response.data.sort(

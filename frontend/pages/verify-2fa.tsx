@@ -21,7 +21,7 @@ const Verify2FA = () => {
         const cleanedCode = verificationCode.replace(/\s+/g, ''); // Eemaldame kõik tühikud
 
         const response = await axios.post(
-          'http://localhost:8000/api/verify-2fa',
+          `${process.env.NEXT_PUBLIC_API_URL}/verify-2fa`,
           { code: cleanedCode, email },
           {
             headers: {

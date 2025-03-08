@@ -46,11 +46,14 @@ interface InvoiceDetails {
 
 const fetchProfileData = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/profile', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
       },
-    });
+    );
     return response.data; // Siit tuleb kasutaja profiili andmed
   } catch (error) {
     console.error('Error fetching profile data:', error);
@@ -98,7 +101,7 @@ const EditInvoice = () => {
       try {
         // Lae arve andmed
         const invoiceResponse = await axios.get(
-          `http://localhost:8000/api/invoices/${id}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/invoices/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`,
@@ -227,12 +230,16 @@ const EditInvoice = () => {
     };
 
     try {
-      await axios.put(`http://localhost:8000/api/invoices/${id}`, payload, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/invoices/${id}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
 
       alert('Invoice updated successfully!');
       router.push('/invoices');

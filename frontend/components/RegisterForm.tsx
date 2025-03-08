@@ -31,11 +31,14 @@ const RegisterForm = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:8000/api/register', {
-        name,
-        email,
-        password,
-      });
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/register`,
+        {
+          name,
+          email,
+          password,
+        },
+      );
 
       const token = response.data.token;
       login(token);

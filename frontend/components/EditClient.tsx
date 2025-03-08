@@ -37,7 +37,7 @@ const EditClientForm = () => {
       const fetchClientDetails = async () => {
         try {
           const response = await axios.get(
-            `http://localhost:8000/api/clients/${id}`,
+            `${process.env.NEXT_PUBLIC_API_URL}/clients/${id}`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem('authToken')}`,
@@ -76,7 +76,7 @@ const EditClientForm = () => {
     setError('');
     try {
       const response = await axios.put(
-        `http://localhost:8000/api/clients/${id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/clients/${id}`,
         {
           name: companyDetails.name,
           contactPerson: companyDetails.contactPerson,

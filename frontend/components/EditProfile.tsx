@@ -49,11 +49,14 @@ const ProfilePage = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/profile', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
         },
-      });
+      );
       setProfile(response.data);
       setFormData(response.data);
     } catch (error) {
@@ -64,11 +67,14 @@ const ProfilePage = () => {
 
   const checkTwoFactorStatus = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/check-2fa', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/check-2fa`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
         },
-      });
+      );
       setIsTwoFactorEnabled(response.data.enabled);
     } catch (error) {
       console.error('Error checking 2FA status:', error);
@@ -78,7 +84,7 @@ const ProfilePage = () => {
   const handleEnable2FA = async () => {
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/enable-2fa',
+        `${process.env.NEXT_PUBLIC_API_URL}/enable-2fa`,
         {},
         {
           headers: {
@@ -117,7 +123,7 @@ const ProfilePage = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/profile/upload-logo',
+        `${process.env.NEXT_PUBLIC_API_URL}/profile/upload-logo`,
         formData,
         {
           headers: {
@@ -169,7 +175,7 @@ const ProfilePage = () => {
       }
 
       const response = await axios.post(
-        'http://localhost:8000/api/profile',
+        `${process.env.NEXT_PUBLIC_API_URL}/profile`,
         updateData,
         {
           headers: {

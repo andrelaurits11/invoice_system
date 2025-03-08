@@ -69,11 +69,14 @@ interface Client {
 
 const fetchProfileData = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/profile', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/profile`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
       },
-    });
+    );
     return response.data; // Siit tuleb kasutaja profiili andmed
   } catch (error) {
     console.error('Error fetching profile data:', error);
@@ -162,7 +165,7 @@ const NewInvoiceForm = () => {
     if (name === 'name' && value.length > 2) {
       try {
         const response = await axios.get(
-          `http://localhost:8000/api/clients?name=${value}`,
+          `${process.env.NEXT_PUBLIC_API_URL}/clients?name=${value}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`,
@@ -290,7 +293,7 @@ const NewInvoiceForm = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8000/api/invoices',
+        `${process.env.NEXT_PUBLIC_API_URL}/invoices`,
         payload,
         {
           headers: {
@@ -347,7 +350,7 @@ const NewInvoiceForm = () => {
       // 2️⃣ Salvesta arve serverisse
       console.log('📤 Saadan arve andmed serverisse...');
       const saveResponse = await axios.post(
-        'http://localhost:8000/api/invoices',
+        `${process.env.NEXT_PUBLIC_API_URL}/invoices`,
         payload,
         {
           headers: {
@@ -423,7 +426,7 @@ const NewInvoiceForm = () => {
 
       console.log('📤 Saadan arve e-mailiga...');
       const sendResponse = await axios.post(
-        'http://localhost:8000/api/invoices/send',
+        `${process.env.NEXT_PUBLIC_API_URL}/invoices/send`,
         requestData,
         {
           headers: {

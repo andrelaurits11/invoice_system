@@ -40,12 +40,16 @@ const NewClientForm = () => {
     e.preventDefault();
     setError('');
     try {
-      await axios.post('http://localhost:8000/api/clients', companyDetails, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/clients`,
+        companyDetails,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
       alert('Klient salvestatud edukalt!');
       router.push('/clients');
     } catch (err) {
